@@ -1,0 +1,9 @@
+a {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+html, body {
+    color: black;
+    font-family: Georgia, serif;
+}
