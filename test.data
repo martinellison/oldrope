@@ -28,15 +28,16 @@ Officer Grommitt paces nervously back and forth in the small watch room. "It was
 $<if (gd.haveRing) {>$
 You have already looked at the victim.
 $>} else {>$
-)[(link: "Ask to look at the corpse")["Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
+$[link]$"Ask to look at the corpse"$[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
 
-(link: "Examine the body")[When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
-$<gd.haveRing = true;>$
+$[link]$"Examine the body"$[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
+$<gd.haveRing = true;>$$[end]$
+$[end]$
 $<}>$
 
 $[include Inventory]$)
 
-$[link]$Go the the crime scene$[ goto CrimeScene]$
+$[link]$Go the the crime scene$[goto CrimeScene]$
 $[page Inventory]$
 $<if (gd.haveRing) {>$
 You have a small scarab ring from the victim.
