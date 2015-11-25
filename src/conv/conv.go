@@ -65,16 +65,24 @@ func parse() {
 }
 func parsePage() {
 	expectIdent("page")
-	log.Printf("page name: %s", tokText())
+	pageName := tokText()
+	log.Printf("page name: %s", pageName)
 	getToken()
+	thePage := page{local: make([]string, 0), theFragments: make([]fragment, 0), theFragmentsByName: make(map[string]fragment, 0), theName: pageName}
 	parseBody([]string{"page"})
+	if thePage.theName != "" {
+		thePageSet[thePage.theName] = thePage
+	}
 }
 func parseBody(stopIdents []string) {
 	log.Printf("parsing body")
+	var theFragment fragment
 	for !stopped(stopIdents) {
-		if tokTyp() == identTokenType {
+		switch tokTyp() {
+		case identTokenType:
 			switch tokText() {
 			case "link":
+				theFragment.theFragType = linkFragType
 				expectIdent("link")
 				if tokTyp() == identTokenType {
 					log.Printf("link name: %s", tokText())
@@ -93,6 +101,12 @@ func parseBody(stopIdents []string) {
 					expectIdent("end")
 				}
 			case "div", "span":
+				switch tokText() {
+				case "div":
+					theFragment.theFragType = divFragType
+				case "span":
+					theFragment.theFragType = spanFragType
+				}
 				getToken()
 				log.Printf("div/span name: %s", tokText())
 				getToken() // div/span name
@@ -106,7 +120,20 @@ func parseBody(stopIdents []string) {
 				log.Printf("unknown ident: %s", tokText())
 				getToken()
 			}
-		} else {
+		case jsCodeTokenType:
+			theFragment.theFragType = jsCodeFragType
+			theFragment.text = tokText()
+			getToken()
+		case jsExprTokenType:
+			theFragment.theFragType = jsExprFragType
+			theFragment.text = tokText()
+			getToken()
+		case textTokenType:
+			theFragment.theFragType = textFragType
+			theFragment.text = tokText()
+			getToken()
+		default:
+			log.Printf("wrong kind of token: %s", tokText())
 			getToken()
 		}
 	}
@@ -149,9 +176,27 @@ func expectIdent(id string) {
 
 type pageSet map[string]page
 type page struct {
-	local []string
-	//	fixedParas
-	//	dynParas
+	local              []string
+	theFragments       []fragment
+	theFragmentsByName map[string]fragment
+	theName            string
+}
+type fragType int
+
+const (
+	spanFragType fragType = iota
+	divFragType
+	paraFragType
+	jsCodeFragType
+	jsExprFragType
+	textFragType
+	linkFragType
+)
+
+type fragment struct {
+	theFragType fragType
+	name        string
+	text        string
 }
 
 var thePageSet pageSet
