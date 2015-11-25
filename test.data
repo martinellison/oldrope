@@ -1,26 +1,29 @@
 $[page start]$
 You are sitting in the Guard's office as usual, when the Chief comes in. 
 
-"I think [[something has come up-&gt;A briefing]]", he says.
-{
+"I think $[link goto Briefing]$something has come up$[end]$", he says.
 $<gd.haveRing = false;>$
-}</tw-passagedata>
-<tw-passagedata pid="2" name="A briefing" tags="" position="50,153">"It seems there is a dead body in [Thieves&#39; Alley]&lt;alley|", the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". (click: ?alley)["Thieves&#39; Alley is one of the most disreputable parts of the City", he explains. "It&#39;s not just thieves that live there, it&#39;s every kind of criminal."]
+$[page Briefing]$
+"It seems there is a dead body in $[link ally]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
 
-"Here is some [more information]&lt;report| from the guard post", he adds. (click: ?report)["Officer Grommitt discovered the body of a man about 30 years old during his patrol of Theives&#39; Alley early this morning. There were no apparent injuries, but quick magic testing showed a very high degree of magic had been used against him. Grommitt&#39;s commander, Officer Sqiggs, recommends that the Special Squad be called in."]
+"Here is some $[link report]$more information$[end]$ from the guard post", he adds. $[span report]$"Officer Grommitt discovered the body of a man about 30 years old during his patrol of Thieves' Alley early this morning. There were no apparent injuries, but quick magic testing showed a very high degree of magic had been used against him. Grommitt's commander, Officer Sqiggs, recommends that the Special Squad be called in."$[end]$
+<ul>
+<li>$[link goto CrimeScene]$Proceed to the scene of the crime$[end]$?
+<li>$[link goto OfficerGrommitt]$Visit Officer Grommitt$[end]$?
+</ul>
+$[page CrimeScene]$
+Thieves' Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. A $[link boy]$small boy$[end]$ looks at you askance from a doorway. 
+$[include Inventory]$
 
-* [[Proceed to the scene of the crime-&gt;Crime scene]]?
-* [[Visit Officer Grommitt-&gt;Officer Grommitt]]?</tw-passagedata>
-<tw-passagedata pid="3" name="Crime scene" tags="" position="50,300">Theives&#39; Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. A [small boy]&lt;boy| looks at you askance from a doorway. 
-(display: "Inventory")
+$[div boy]$"I saw nothing", he says. 
+<ul><li>$[link]$Ignore him.$[act]$ $[end]$
+<li>$[link]$Stare at him$[act]$"Threekins wasn't even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.$[end]$
+$[end]$
 
-(click: "boy")["I saw nothing", he says. 
-(link: "* Ignore him.")[ ]
-(link: "* Stare at him")["Threekins wasn&#39;t even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.]
-]
-* [[Visit Officer Grommitt-&gt;Officer Grommitt]]
-(link: "* Wander down one of the passageways")[As you get further into the passageway, it gets darker and darker. Then you feel a cosh smash into the back of your head. (live: 4s)[(goto: "Dead")]]</tw-passagedata>
-<tw-passagedata pid="4" name="Officer Grommitt" tags="" position="200,300">Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn&#39;t seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
+<ul><li>$[link goto OfficerGrommitt]$Visit Officer Grommitt$[end]$
+<li>$[link]$Wander down one of the passageways$[act]$As you get further into the passageway, it gets darker and darker. Then you feel a cosh smash into the back of your head.$[end]$</ul>
+$[page OfficerGrommitt ]$
+Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
 
 $<if (gd.haveRing) {>$
 You have already looked at the victim.
@@ -31,10 +34,10 @@ $>} else {>$
 $<gd.haveRing = true;>$
 $<}>$
 
-(display: "Inventory")
+$[include Inventory]$)
 
-* [[Go the the crime scene-&gt;Crime scene]]</tw-passagedata>
-<tw-passagedata pid="5" name="Inventory" tags="" position="1250,50">{
-(if: $haveRing)[You have a small scarab ring from the victim.]
-}</tw-passagedata>
-<tw-passagedata pid="6" name="Dead" tags="" position="1250.0001,200">You are now dead.</tw-passagedata>
+$[link CrimeScene]$Go the the crime scene$[end]$
+$[page Inventory]$
+$<if (gd.haveRing) {>$
+You have a small scarab ring from the victim.
+$<}>$

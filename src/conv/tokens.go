@@ -70,7 +70,7 @@ func getTokens() {
 				}
 			case commentState:
 				if scanChars(2) == "*/" {
-					log.Print("end of comment")
+					//log.Print("end of comment")
 					setTokenState(textState)
 					scanState.charPos += 2
 				} else {
@@ -93,6 +93,7 @@ func getTokens() {
 					charToToken()
 				}
 			case convState:
+				//	log.Printf("scanning directive: %s...", scanChars(5))
 				if scanChars(2) == "]$" {
 					//emitToken(convTokenType)
 					scanState.state = textState
@@ -121,7 +122,7 @@ func getTokens() {
 }
 func getConvToken() {
 	examineNextChar()
-	log.Printf("looking for conv token, examining from: %b at: %d type: %d", scanState.nextChar, scanState.charPos, scanState.nextCharType)
+	//log.Printf("looking for conv token, examining from: %c at: %d type: %s", scanState.nextChar, scanState.charPos, scanState.nextCharType)
 	switch scanState.nextCharType {
 	case identCharType:
 		for scanState.nextCharType == identCharType || scanState.nextCharType == digitCharType {
@@ -134,7 +135,7 @@ func getConvToken() {
 		}
 		emitToken(numberTokenType)
 	case spaceCharType:
-		for scanState.nextCharType == digitCharType {
+		for scanState.nextCharType == spaceCharType {
 			scanState.charPos++
 			examineNextChar()
 		}
@@ -147,9 +148,13 @@ func getConvToken() {
 		}
 		emitToken(delimTokenType)
 	case stopCharType:
-		log.Printf("stop char detected %b", scanState.nextChar)
+		log.Printf("stop char detected %c in %s...", scanState.nextChar, scanChars(5))
+		scanState.charPos++
+		examineNextChar()
 	default:
-		log.Printf("unknown detected %b", scanState.nextChar)
+		log.Printf("unknown detected %c", scanState.nextChar)
+		scanState.charPos++
+		examineNextChar()
 	}
 }
 
@@ -161,29 +166,31 @@ var scanState struct {
 	tokenText    []byte
 	nextChar     byte
 	nextCharType charType
+	more         bool
 }
 
 func scanChars(leng int) (chars string) {
 	useLen := leng
 	if leng+scanState.charPos > scanState.lineLen {
 		useLen = scanState.lineLen - scanState.charPos
-		log.Printf("only returning %d chars", useLen)
+		//log.Printf("only returning %d chars", useLen)
 	}
 	return scanState.line.text[scanState.charPos : scanState.charPos+useLen]
 }
 func charToToken() {
 	currentChar := scanState.line.text[scanState.charPos]
 	scanState.tokenText = append(scanState.tokenText, currentChar)
-	scanState.charPos++
 	//	if scanState.charPos >= scanState.lineLen {
 	//		log.Print("ran off end of line!")
 	//	}
+	scanState.charPos++
 	examineNextChar()
 }
 func examineNextChar() {
 	if scanState.charPos >= scanState.lineLen {
-		log.Print("atend of line")
+		//log.Print("at end of line")
 		scanState.nextCharType = stopCharType
+		scanState.more = false
 		return
 	}
 	scanState.nextChar = scanState.line.text[scanState.charPos]
@@ -195,7 +202,7 @@ func setTokenState(newState scanLineState) {
 }
 func emitToken(theTokenType tokenType) {
 	tokenText := string(scanState.tokenText)
-	log.Printf("emitting token: %s", tokenText)
+	//log.Printf("emitting token: %s", tokenText)
 	theToken := token{theType: theTokenType, text: tokenText, lineNumber: scanState.line.number}
 	scanState.tokenText = make([]byte, 0)
 	tokenChan <- theToken
@@ -211,6 +218,25 @@ const (
 	stopCharType
 	otherCharType
 )
+
+func (theCharType charType) String() string {
+	switch theCharType {
+	case identCharType:
+		return "ident"
+	case digitCharType:
+		return "digit"
+	case spaceCharType:
+		return "spaceC"
+	case specialCharType:
+		return "special"
+	case stopCharType:
+		return "stop"
+	case otherCharType:
+		return "other"
+	default:
+		return "(??)"
+	}
+}
 
 var charTypes []charType
 

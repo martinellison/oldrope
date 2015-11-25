@@ -41,5 +41,5 @@ func getLines(path string) {
 	if err != nil {
 		log.Printf("get lines err: %v", err)
 	}
-	log.Printf("%d lines sent", lineNumber)
+	log.Printf("%d lines read", lineNumber)
 }
