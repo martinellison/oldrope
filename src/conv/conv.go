@@ -50,18 +50,7 @@ var theParser struct {
 func parse() {
 	getToken()
 	for tokTyp() != eofTokenType {
-		switch tokTyp() {
-		case eofTokenType:
-			log.Fatal("already at eof")
-		case jsCodeTokenType:
-			getToken()
-		case jsExprTokenType:
-			getToken()
-		case textTokenType:
-			getToken()
-		case numberTokenType:
-			getToken()
-		case identTokenType:
+		if tokTyp() == identTokenType {
 			switch tokText() {
 			case "page":
 				parsePage()
@@ -69,13 +58,75 @@ func parse() {
 				log.Printf("unknown ident: %s", theParser.theCurrentToken.text)
 				getToken()
 			}
-		case delimTokenType:
+		} else {
 			getToken()
-		default:
-			log.Fatal("unknown token")
 		}
 	}
 }
+func parsePage() {
+	expectIdent("page")
+	log.Printf("page name: %s", tokText())
+	getToken()
+	parseBody([]string{"page"})
+}
+func parseBody(stopIdents []string) {
+	log.Printf("parsing body")
+	for !stopped(stopIdents) {
+		if tokTyp() == identTokenType {
+			switch tokText() {
+			case "link":
+				expectIdent("link")
+				if tokTyp() == identTokenType {
+					log.Printf("link name: %s", tokText())
+					getToken()
+				}
+				parseBody([]string{"end", "page", "goto", "act"})
+				if tokIsIdent("goto") {
+					expectIdent("goto")
+					log.Printf("goto target: %s", tokText())
+					getToken()
+				} else if tokIsIdent("end") {
+					expectIdent("end")
+				} else if tokIsIdent("act") {
+					expectIdent("act")
+					parseBody([]string{"end"})
+					expectIdent("end")
+				}
+			case "div", "span":
+				getToken()
+				log.Printf("div/span name: %s", tokText())
+				getToken() // div/span name
+				parseBody([]string{"end"})
+				expectIdent("end")
+			case "include":
+				expectIdent("include")
+				log.Printf("include target: %s", tokText())
+				getToken() //target
+			default:
+				log.Printf("unknown ident: %s", tokText())
+				getToken()
+			}
+		} else {
+			getToken()
+		}
+	}
+	log.Print("body done")
+}
+func stopped(stopIdents []string) bool {
+	if tokTyp() == eofTokenType {
+		return true
+	}
+	if theParser.theCurrentToken.theType != identTokenType {
+		return false
+	}
+	for _, stopIdent := range stopIdents {
+		if stopIdent == theParser.theCurrentToken.text {
+			return true
+		}
+	}
+	return false
+}
+
 func getToken() {
 	theParser.theCurrentToken = <-tokenChan
 	if tokTyp() == eofTokenType {
@@ -94,48 +145,6 @@ func expectIdent(id string) {
 		log.Printf("expected %s but not found!", id)
 	}
 
-}
-func parsePage() {
-	expectIdent("page")
-	log.Printf("page name: %s", tokText())
-	getToken()
-	parseBody("page")
-}
-func parseBody(stopIdent string) {
-	log.Printf("parsing body until: %s", stopIdent)
-	for tokTyp() != eofTokenType && !tokIsIdent(stopIdent) {
-		if tokTyp() == identTokenType {
-			switch tokText() {
-			case "link":
-				expectIdent("link")
-				if tokIsIdent("goto") {
-					expectIdent("goto")
-					log.Printf("goto target: %s", tokText())
-					getToken() // target
-				} else {
-					log.Printf("link name: %s", tokText())
-					getToken() // link name
-				}
-				parseBody("end")
-				expectIdent("end")
-			case "div", "span":
-				getToken()
-				log.Printf("div/span name: %s", tokText())
-				getToken() // div/span name
-				parseBody("end")
-			case "include":
-				expectIdent("include")
-				log.Printf("include target: %s", tokText())
-				getToken() //target
-			default:
-				log.Printf("unknown ident: %s", tokText())
-				getToken()
-			}
-		} else {
-			getToken()
-		}
-	}
-	log.Print("body done")
 }
 
 type pageSet map[string]page
