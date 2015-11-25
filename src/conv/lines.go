@@ -25,11 +25,9 @@ func getLines(path string) {
 	}
 	defer file.Close()
 	reader := bufio.NewReader(file)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			break
-		}
+	for err == nil {
+		var line string
+		line, err = reader.ReadString('\n')
 		lineNumber++
 		lineChan <- scanLine{text: line, number: lineNumber, eof: false}
 	}

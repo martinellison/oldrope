@@ -9,6 +9,8 @@ func main() {
 	go getLines("/home/martin/git/twine/test.data")
 	linesDone = make(chan int)
 	go getTokens()
+	tokenChan = make(chan token)
+	go dumpTokens()
 	<-linesDone
 	log.Print("all done.")
 }
@@ -26,45 +28,31 @@ func dumpLines() {
 	linesDone <- 1
 }
 
-type token struct {
-	theType    tokenType
-	text       string
-	lineNumber int
-}
-type tokenType int
-
-const (
-	eofTokenType tokenType = iota
-)
-
-var tokenChan chan token
-
-func getTokens() {
+func dumpTokens() {
+	log.Print("dumping tokens...")
 	for {
-		scanState.line = <-lineChan
-		if scanState.line.eof {
-		//	tokenChan <- token{theType: eofTokenType}			
-	linesDone <- 1
+		log.Print("waiting for token")
+		var theToken token
+		theToken = <-tokenChan
+		if theToken.theType == eofTokenType {
 			break
 		}
-		log.Printf("%d: %s", scanState.line.number, scanState.line.text)
-		scanState.lineLen = len(scanState.line.text)
-		scanState.charPos = 0
-		for scanState.charPos < scanState.lineLen {
-			log.Printf("scan char is: '%s'",scanChars(1))
-			
-			scanState.charPos ++
-		}
+		log.Printf("%d: %s", theToken.lineNumber, theToken.text)
 	}
-	log.Print("all lines read")
+	log.Print("all tokens read")
+	linesDone <- 1
 }
-var scanState struct {
-	lineLen int
-	charPos int
-	line scanLine
+
+type pageSet map[string]page
+type page struct {
+	local []string
+	fixedParas
+	dynParas
 }
-func scanChars (leng int)(chars string) {
-	useLen:=leng
-	if leng+scanState.charPos>scanState.lineLen{useLen=scanState.lineLen-scanState.charPos}
-	return scanState.line.text[scanState.charPos:useLen]
+
+var startPageName string
+
+func init() {
+	pageSet = make(map[string]page, 0)
+	startPageName = "start"
 }
