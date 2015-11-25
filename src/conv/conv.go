@@ -1,7 +1,10 @@
 // conv.go
 package main
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 func main() {
 	log.Print("start")
@@ -13,6 +16,7 @@ func main() {
 	go parse()
 	<-linesDone
 	log.Print("all done.")
+	dumpPages()
 }
 
 func dumpLines() {
@@ -68,16 +72,22 @@ func parsePage() {
 	pageName := tokText()
 	log.Printf("page name: %s", pageName)
 	getToken()
-	thePage := page{local: make([]string, 0), theFragments: make([]fragment, 0), theFragmentsByName: make(map[string]fragment, 0), theName: pageName}
-	parseBody([]string{"page"})
+	thePage := page{local: make([]string, 0), theFragmentsByName: make(map[string]*fragment, 0), theName: pageName}
+	thePage.theFragments = parseBody([]string{"page"})
 	if thePage.theName != "" {
 		thePageSet[thePage.theName] = thePage
 	}
+	for _, fr := range thePage.theFragments {
+		if fr.name != "" {
+			thePage.theFragmentsByName[fr.name] = fr
+		}
+	}
 }
-func parseBody(stopIdents []string) {
+func parseBody(stopIdents []string) (theFragments []*fragment) {
 	log.Printf("parsing body")
-	var theFragment fragment
+	theFragments = make([]*fragment, 0)
 	for !stopped(stopIdents) {
+		theFragment := &fragment{theFragments: make([]*fragment, 0)}
 		switch tokTyp() {
 		case identTokenType:
 			switch tokText() {
@@ -88,7 +98,7 @@ func parseBody(stopIdents []string) {
 					log.Printf("link name: %s", tokText())
 					getToken()
 				}
-				parseBody([]string{"end", "page", "goto", "act"})
+				theFragment.theFragments = parseBody([]string{"end", "page", "goto", "act"})
 				if tokIsIdent("goto") {
 					expectIdent("goto")
 					log.Printf("goto target: %s", tokText())
@@ -97,7 +107,7 @@ func parseBody(stopIdents []string) {
 					expectIdent("end")
 				} else if tokIsIdent("act") {
 					expectIdent("act")
-					parseBody([]string{"end"})
+					/*??=*/ parseBody([]string{"end"})
 					expectIdent("end")
 				}
 			case "div", "span":
@@ -110,7 +120,7 @@ func parseBody(stopIdents []string) {
 				getToken()
 				log.Printf("div/span name: %s", tokText())
 				getToken() // div/span name
-				parseBody([]string{"end"})
+				theFragment.theFragments = parseBody([]string{"end"})
 				expectIdent("end")
 			case "include":
 				expectIdent("include")
@@ -136,8 +146,10 @@ func parseBody(stopIdents []string) {
 			log.Printf("wrong kind of token: %s", tokText())
 			getToken()
 		}
+		theFragments = append(theFragments, theFragment)
 	}
 	log.Print("body done")
+	return
 }
 func stopped(stopIdents []string) bool {
 	if tokTyp() == eofTokenType {
@@ -177,8 +189,8 @@ func expectIdent(id string) {
 type pageSet map[string]page
 type page struct {
 	local              []string
-	theFragments       []fragment
-	theFragmentsByName map[string]fragment
+	theFragments       []*fragment
+	theFragmentsByName map[string]*fragment
 	theName            string
 }
 type fragType int
@@ -193,10 +205,32 @@ const (
 	linkFragType
 )
 
+func (theFragType fragType) String() string {
+	switch theFragType {
+	case spanFragType:
+		return "span"
+	case divFragType:
+		return "div"
+	case paraFragType:
+		return "para"
+	case jsCodeFragType:
+		return "jsCode"
+	case jsExprFragType:
+		return "jsExpr"
+	case textFragType:
+		return "text"
+	case linkFragType:
+		return "link"
+	default:
+		return "(??)"
+	}
+}
+
 type fragment struct {
-	theFragType fragType
-	name        string
-	text        string
+	theFragType  fragType
+	name         string
+	text         string
+	theFragments []*fragment
 }
 
 var thePageSet pageSet
@@ -206,4 +240,21 @@ var startPageName string
 func init() {
 	thePageSet = make(map[string]page, 0)
 	startPageName = "start"
+}
+func dumpPages() {
+	for _, page := range thePageSet {
+		fmt.Printf("--- page %s ---\n", page.theName)
+		for _, fr := range page.theFragments {
+			dumpFragment(fr)
+		}
+	}
+}
+func dumpFragment(fr *fragment) {
+	fmt.Printf("%s (%s): %s\n", fr.name, fr.theFragType, fr.text)
+	for _, fr := range fr.theFragments {
+		dumpFragment(fr)
+	}
+	if len(fr.theFragments) > 0 {
+		fmt.Print("---\n")
+	}
 }
