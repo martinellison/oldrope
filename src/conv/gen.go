@@ -82,7 +82,25 @@ func expandTemplate(w io.Writer) {
 }
 func genStart(w io.Writer) {
 	w.Write([]byte(compress(
-		`var gd = {};
+		`<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'/> 
+ <style>a {
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+}
+html, body {
+    color: black;
+    font-family: Georgia, serif;
+}</style>
+</head>
+<body>
+<div id='main'> </div>
+<script src='jquery.js'></script>
+<script>
+		var gd = {};
 var ld = {};
 var currentPage = 'start';
 var cp;
@@ -104,5 +122,7 @@ var displayPage = function() {
 func genEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');
 displayPage();
-console.log('script loaded');`)))
+console.log('script loaded');</script>
+</body>
+</html>`)))
 }

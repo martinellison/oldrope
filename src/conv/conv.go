@@ -22,7 +22,7 @@ func main() {
 	dumpPages()
 	makeTemplate()
 	makeGenData()
-	file, err := os.Create("test/testres.js")
+	file, err := os.Create("test/testout.html")
 	if err != nil {
 		log.Fatal(err)
 	}
