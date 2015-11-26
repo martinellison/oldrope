@@ -4,7 +4,6 @@ package main
 import (
 	"io"
 	"log"
-	"os"
 	"regexp"
 	"text/template"
 )
@@ -76,8 +75,34 @@ var theOutData outData
 //	theOutData = outData{Pages: []*outPage{pageZzz, pageBill}}
 //}
 func expandTemplate(w io.Writer) {
-	err := templ.Execute(os.Stdout, theOutData)
+	err := templ.Execute(w, theOutData)
 	if err != nil {
 		log.Fatalf("template exp error: %v", err)
 	}
+}
+func genStart(w io.Writer) {
+	w.Write([]byte(compress(
+		`var gd = {};
+var ld = {};
+var currentPage = 'start';
+var cp;
+var pages;
+var setPage = function(pageName) {
+    console.log('displaying page: ' + pageName);
+    currentPage = pageName;
+    cp = pages[currentPage];
+    if (!cp) console.error('unknown page: ' + currentPage);
+    ld = {};
+    cp.set();
+    console.log('displayed ' + currentPage);
+};
+var displayPage = function() {
+    cp.redisplay();
+    console.log('redisplayed ' + currentPage);
+};`)))
+}
+func genEnd(w io.Writer) {
+	w.Write([]byte(compress(`setPage('start');
+displayPage();
+console.log('script loaded');`)))
 }

@@ -70,6 +70,7 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 				expectIdent("link")
 				if tokTyp() == identTokenType {
 					log.Printf("link name: %s", tokText())
+					theFragment.name = tokText()
 					getToken()
 				}
 				theFragment.theFragments = parseBody([]string{"end", "page", "goto", "act"})
