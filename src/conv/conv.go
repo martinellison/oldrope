@@ -2,9 +2,9 @@
 package main
 
 import (
+	"html"
 	"log"
 	"os"
-	"text/template"
 )
 
 func main() {
@@ -18,16 +18,9 @@ func main() {
 	<-linesDone
 	log.Print("all done.")
 	dumpPages()
-	templateText := "{{range .}} {{.theName}}: , {{end}}"
-	templ, err := template.New("page").Parse(templateText)
-	if err != nil {
-		log.Fatalf("template def error: %v", err)
-	}
-	data := thePageSet
-	err = templ.Execute(os.Stdout, data)
-	if err != nil {
-		log.Fatalf("template exp error: %v", err)
-	}
+	makeTemplate()
+	makeGenData()
+	expandTemplate(os.Stdout)
 }
 
 func dumpLines() {
@@ -41,4 +34,52 @@ func dumpLines() {
 	}
 	log.Print("all lines read")
 	linesDone <- 1
+}
+func makeGenData() {
+	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
+	for _, page := range thePageSet {
+		outPage := &outPage{Name: page.theName, SetLines: make([]string, 0, 0), FixLines: make([]fix, 0, 0), RedisplayLines: make([]string, 0, 0)}
+		outPage.codePage(&page)
+		theOutData.Pages = append(theOutData.Pages, outPage)
+	}
+}
+func (theOutPage *outPage) codePage(thePage *page) {
+	for _, theFragment := range thePage.theFragments {
+		theOutPage.codeFragment(theFragment)
+	}
+}
+func (theOutPage *outPage) codeFragment(theFragment *fragment) {
+	comprText := compress(theFragment.text)
+	escapeText := html.EscapeString(comprText)
+	switch theFragment.theFragType {
+	case spanFragType:
+		spanText := "parts.push('<span>" + escapeText + "</span>');"
+		theOutPage.SetLines = append(theOutPage.SetLines, spanText)
+	case divFragType:
+		divText := "parts.push('<div>" + escapeText + "</div>');"
+		theOutPage.SetLines = append(theOutPage.SetLines, divText)
+	case paraFragType:
+		paraText := "parts.push('<p>" + escapeText + "</p>');"
+		theOutPage.SetLines = append(theOutPage.SetLines, paraText)
+	case jsCodeFragType:
+		theOutPage.SetLines = append(theOutPage.SetLines, comprText)
+	case jsExprFragType:
+		exprText := "parts.push(" + comprText + ");"
+		theOutPage.SetLines = append(theOutPage.SetLines, exprText)
+	case textFragType:
+		textText := "parts.push('" + escapeText + "');"
+		theOutPage.SetLines = append(theOutPage.SetLines, textText)
+	case linkFragType:
+	default:
+	}
+	//	fmt.Printf("%s%s (%s): %s\n", theFragment.name, theFragment.theFragType, theFragment.text)
+	if theFragment.auxName != "" {
+		//		fmt.Printf("%sgoto:%s\n", indent, theFragment.auxName)
+	}
+	for _, theFragment := range theFragment.theFragments {
+		theOutPage.codeFragment(theFragment)
+	}
+	for _, theFragment := range theFragment.actionFragments {
+		theOutPage.codeFragment(theFragment)
+	}
 }
