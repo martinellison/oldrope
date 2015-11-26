@@ -1,0 +1,6 @@
+cd ~/git/twine 
+export GOPATH=~/git/twine 
+go fmt gen
+go build gen
+go vet gen
+./gen
