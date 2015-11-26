@@ -25,9 +25,9 @@ func makeTemplate() {
 			{{range .SetLines}}
 			{{.}}
 			{{end}}			
-            $('#main').html(parts.join("\n"));
+            setHtml('main',parts.join("\n"));
 			{{range .FixLines}}			
-			$('#{{.Name}}').click(function() {
+			setClick('{{.Name}}',function() {
                 {{.Code}}
             });
 			{{end}}
@@ -98,7 +98,6 @@ html, body {
 </head>
 <body>
 <div id='main'> </div>
-<script src='jquery.js'></script>
 <script>
 		var gd = {};
 var ld = {};
@@ -117,7 +116,10 @@ var setPage = function(pageName) {
 var displayPage = function() {
     cp.redisplay();
     console.log('redisplayed ' + currentPage);
-};`)))
+};
+var setHtml=function(id,text){document.getElementById(id).innerHTML = text;};
+var setClick=function(id,fn){document.getElementById(id).onclick=fn;};
+`)))
 }
 func genEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');

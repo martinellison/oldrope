@@ -123,7 +123,7 @@ func (theOutPage *outPage) codeFragment(theFragment *fragment, set bool) {
 	switch theFragment.theFragType {
 	case spanFragType:
 		theOutPage.addLine("parts.push('</span>');", set)
-		theOutPage.addLine("$('#"+fragName+"').html(parts.join(','));}", false)
+		theOutPage.addLine("setHtml('"+fragName+"',parts.join(','));}", false)
 	case divFragType:
 		theOutPage.addLine("parts.push('</div>');", set)
 	case paraFragType:
