@@ -44,6 +44,7 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		fragName = fmt.Sprintf("z%d", autoLink)
 	}
 	theOutFrag.Name = fragName
+	fragIdExtendAttr := " id=\"" + fragName + "-x\" "
 	fragIdAttr := " id=\"" + fragName + "\" "
 	//	subset := true
 	switch theFragment.theFragType {
@@ -56,6 +57,8 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 	case divFragType:
 		divText := "parts.push('<div" + fragIdAttr + ">" + escapeText + "');"
 		theOutFrag.addLine(divText, true)
+		theOutFrag.addLine("ld.s"+fragName+"=false;", true)
+		theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", false)
 	//	subset = false
 	case paraFragType:
 		paraText := "parts.push('<p" + fragIdAttr + ">" + escapeText + "');"
@@ -76,7 +79,7 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 			theOutFrag.addLine(htmlText, true)
 		}
 	case linkFragType:
-		textText := "parts.push('<a" + fragIdAttr + ">');"
+		textText := "parts.push('<a" + fragIdExtendAttr + ">');"
 		theOutFrag.addLine(textText, true)
 		code := ""
 		if theFragment.auxName != "" {
@@ -84,7 +87,7 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		} else {
 			code = " ld.s" + fragName + "=true; displayPage();"
 		}
-		linkFix := fix{Name: fragName, Code: code}
+		linkFix := fix{Name: fragName + "-x", Code: code}
 		theOutFrag.FixLines = append(theOutFrag.FixLines, linkFix)
 		//theOutFrag.FixLines = []fix{linkFix}
 	default:
@@ -93,6 +96,15 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		subOutFrag := makeOutPage(theFragment.name)
 		subOutFrag.codeFragment(theFragment, true)
 		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
+		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
+		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+	}
+	for _, theFragment := range theFragment.actionFragments {
+		subOutFrag := makeOutPage(theFragment.name)
+		subOutFrag.codeFragment(theFragment, true)
+		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.SetLines...)
+		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
+		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
 	}
 
 	switch theFragment.theFragType {
@@ -101,17 +113,12 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", false)
 	case divFragType:
 		theOutFrag.addLine("parts.push('</div>');", true)
+		theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", false)
 	case paraFragType:
 		theOutFrag.addLine("parts.push('</p>');", true)
 	case linkFragType:
 		theOutFrag.addLine("parts.push('</a>');", true)
 	default:
-	}
-	for _, theFragment := range theFragment.actionFragments {
-		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, true)
-		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
-		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
 	}
 }
 
