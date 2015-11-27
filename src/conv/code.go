@@ -26,7 +26,7 @@ var allSpace *regexp.Regexp
 
 func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
 
-func (theOutFrag *outPage) codeFragment(theFragment *fragment) {
+func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 	theOutFrag = new(outPage)
 	comprText := compress(theFragment.text)
 	escapeText := html.EscapeString(comprText)
@@ -61,6 +61,9 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment) {
 			textText := "parts.push('" + escapeText + "');"
 			theOutFrag.addLine(textText, set)
 		}
+	case htmlFragType:
+		htmlText := "parts.push('<" + comprText + "'>);"
+		theOutFrag.addLine(htmlText, set)
 	case linkFragType:
 		textText := "parts.push('<a" + fragIdAttr + ">');"
 		theOutFrag.addLine(textText, set)
@@ -71,14 +74,12 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment) {
 			code = " ld.s" + fragName + "=true; displayPage();"
 		}
 		linkFix := fix{Name: fragName, Code: code}
-		theOutFrag.FixLines = append(theOutPage.FixLines, linkFix)
+		theOutFrag.FixLines = append(theOutFrag.FixLines, linkFix)
+		//theOutFrag.FixLines = []fix{linkFix}
 	default:
 	}
 	for _, theFragment := range theFragment.theFragments {
 		theOutFrag.codeFragment(theFragment, set)
-	}
-	for _, theFragment := range theFragment.actionFragments {
-		theOutFrag.codeFragment(theFragment, subset)
 	}
 
 	switch theFragment.theFragType {
@@ -92,6 +93,9 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment) {
 	case linkFragType:
 		theOutFrag.addLine("parts.push('</a>');", set)
 	default:
+	}
+	for _, theFragment := range theFragment.actionFragments {
+		theOutFrag.codeFragment(theFragment, subset)
 	}
 }
 

@@ -39,16 +39,3 @@ func main() {
 	expandTemplate(file)
 	genEnd(file)
 }
-
-//func dumpLines() {
-//	for {
-//		var line scanLine
-//		line = <-lineChan
-//		if line.eof {
-//			break
-//		}
-//		log.Printf("%d: %s", line.number, line.text)
-//	}
-//	log.Print("all lines read")
-//	linesDone <- 1
-//}

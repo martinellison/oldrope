@@ -18,6 +18,7 @@ const (
 	numberTokenType
 	identTokenType
 	delimTokenType
+	htmlTokenType
 )
 
 var tokenChan chan token
@@ -30,6 +31,7 @@ const (
 	jsCodeState
 	jsExprState
 	convState
+	htmlState
 )
 
 func getTokens() {
@@ -53,7 +55,7 @@ func getTokens() {
 					emitToken(textTokenType)
 					scanState.state = commentState
 					scanState.charPos += 2
-				case "$<":
+				case "${":
 					emitToken(textTokenType)
 					scanState.state = jsCodeState
 					scanState.charPos += 2
@@ -64,6 +66,10 @@ func getTokens() {
 				case "$[":
 					emitToken(textTokenType)
 					scanState.state = convState
+					scanState.charPos += 2
+				case "$<":
+					emitToken(htmlTokenType)
+					scanState.state = htmlState
 					scanState.charPos += 2
 				default:
 					charToToken()
@@ -77,7 +83,7 @@ func getTokens() {
 					scanState.charPos++
 				}
 			case jsCodeState:
-				if scanChars(2) == ">$" {
+				if scanChars(2) == "}$" {
 					emitToken(jsCodeTokenType)
 					scanState.state = textState
 					scanState.charPos += 2
@@ -101,6 +107,14 @@ func getTokens() {
 				} else {
 					getConvToken()
 				}
+			case htmlState:
+				if scanChars(2) == ">$" {
+					emitToken(htmlTokenType)
+					scanState.state = textState
+					scanState.charPos += 2
+				} else {
+					charToToken()
+				}
 			default:
 				log.Fatalf("unknown scan state: %d", scanState.state)
 			}
@@ -117,6 +131,8 @@ func getTokens() {
 		emitToken(jsExprTokenType)
 	case convState:
 		//emitToken(convTokenType)
+	case htmlState:
+		emitToken(htmlTokenType)
 	}
 	log.Print("all lines read")
 }

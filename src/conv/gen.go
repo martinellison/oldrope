@@ -69,11 +69,6 @@ type fix struct {
 
 var theOutData outData
 
-//func makeTestData() { //not used
-//	pageZzz := &outPage{Name: "zzz", SetLines: []string{"aaa", "bbb"}, RedisplayLines: []string{"xxx", "yyy"}}
-//	pageBill := &outPage{Name: "bill", SetLines: []string{"zzz", "xxx"}, RedisplayLines: []string{"ccc", "vvv"}}
-//	theOutData = outData{Pages: []*outPage{pageZzz, pageBill}}
-//}
 func expandTemplate(w io.Writer) {
 	err := templ.Execute(w, theOutData)
 	if err != nil {

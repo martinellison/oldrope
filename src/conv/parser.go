@@ -120,6 +120,10 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 			theFragment.theFragType = textFragType
 			theFragment.text = tokText()
 			getToken()
+		case htmlTokenType:
+			theFragment.theFragType = htmlFragType
+			theFragment.text = tokText()
+			getToken()
 		default:
 			log.Printf("wrong kind of token: %s", tokText())
 			getToken()
@@ -184,6 +188,7 @@ const (
 	jsExprFragType
 	textFragType
 	linkFragType
+	htmlFragType
 )
 
 func (theFragType fragType) String() string {
@@ -202,6 +207,8 @@ func (theFragType fragType) String() string {
 		return "text"
 	case linkFragType:
 		return "link"
+	case htmlFragType:
+		return "html"
 	default:
 		return "(??)"
 	}
