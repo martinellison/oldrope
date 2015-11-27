@@ -93,8 +93,13 @@ html, body {
 </head>
 <body>
 <div id='main'> </div>
-<script>
-		var gd = {};
+`)))
+}
+
+//<script>
+func genJsStart(w io.Writer) {
+	w.Write([]byte(compress(
+		`		var gd = {};
 var ld = {};
 var currentPage = 'start';
 var cp;
@@ -116,10 +121,13 @@ var setHtml=function(id,text){document.getElementById(id).innerHTML = text;};
 var setClick=function(id,fn){document.getElementById(id).onclick=fn;};
 `)))
 }
-func genEnd(w io.Writer) {
+func genJsEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');
 displayPage();
-console.log('script loaded');</script>
-</body>
+console.log('script loaded');
+`)))
+}
+func genEnd(w io.Writer) {
+	w.Write([]byte(compress(`</body>
 </html>`)))
 }

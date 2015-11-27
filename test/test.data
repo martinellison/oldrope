@@ -20,7 +20,7 @@ $<ul><li>$$[link]$Ignore him.$[act]$ $[end]$
 $<li>$$[link]$Stare at him$[act]$"Threekins wasn't even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.$[end]$
 $[end]$
 
-$<ul>$$<li}$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$
+$<ul><li>$$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$
 $<li>$$[link]$Wander down one of the passageways$[act]$As you get further into the passageway, it gets darker and darker. Then you feel a cosh smash into the back of your head.$[end]$$</ul>$
 $[page OfficerGrommitt ]$
 Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
