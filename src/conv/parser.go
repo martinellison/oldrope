@@ -102,6 +102,7 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 			case "include":
 				expectIdent("include")
 				log.Printf("include target: %s", tokText())
+				theFragment.theFragType = includeFragType
 				theFragment.auxName = tokText()
 				getToken() //target
 			default:
@@ -189,6 +190,7 @@ const (
 	textFragType
 	linkFragType
 	htmlFragType
+	includeFragType
 )
 
 func (theFragType fragType) String() string {
@@ -209,6 +211,8 @@ func (theFragType fragType) String() string {
 		return "link"
 	case htmlFragType:
 		return "html"
+	case includeFragType:
+		return "include"
 	default:
 		return "(??)"
 	}

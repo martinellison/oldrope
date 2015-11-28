@@ -16,7 +16,7 @@ func makeGenData() {
 	}
 }
 func makeOutPage(theName string) (theOutPage *outPage) {
-	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]fix, 0, 0), RedisplayLines: make([]string, 0, 0)}
+	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]fix, 0, 0), RedisplayLines: make([]string, 0, 0), Refixes: make([]fix, 0, 0)}
 	return
 }
 func (theOutPage *outPage) codePage(thePage *page) {
@@ -26,6 +26,7 @@ func (theOutPage *outPage) codePage(thePage *page) {
 		theOutPage.SetLines = append(theOutPage.SetLines, subOutFrag.SetLines...)
 		theOutPage.FixLines = append(theOutPage.FixLines, subOutFrag.FixLines...)
 		theOutPage.RedisplayLines = append(theOutPage.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutPage.Refixes = append(theOutPage.Refixes, subOutFrag.Refixes...)
 	}
 }
 
@@ -90,6 +91,11 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		linkFix := fix{Name: fragName + "-x", Code: code}
 		theOutFrag.FixLines = append(theOutFrag.FixLines, linkFix)
 		//theOutFrag.FixLines = []fix{linkFix}
+	case includeFragType:
+		theOutFrag.addLine("pages."+theFragment.auxName+".set(parts);", true)
+		//??	theOutFrag.FixLines = append(theOutFrag.FixLines, "pages."+theFragment.auxName+".fix();")
+		theOutFrag.addLine("pages."+theFragment.auxName+".redisplay(parts);", false)
+	//??	theOutFrag.Refixes = append(theOutFrag.Refixes, "pages."+theFragment.auxName+".refix();")
 	default:
 	}
 	for _, theFragment := range theFragment.theFragments {
@@ -98,13 +104,15 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
 		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
 	}
 	for _, theFragment := range theFragment.actionFragments {
 		subOutFrag := makeOutPage(theFragment.name)
 		subOutFrag.codeFragment(theFragment, true)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.SetLines...)
-		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
+		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.FixLines...)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
 	}
 
 	switch theFragment.theFragType {

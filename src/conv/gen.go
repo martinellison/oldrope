@@ -20,21 +20,28 @@ func makeTemplate() {
 	var err error
 	templateText := compress(`pages = {
 	{{range .Pages}} {{.Name}}: {
-	 	set: function() {
-            parts = [];
+	 	set: function(parts) {
 			{{range .SetLines}}
 			{{.}}
-			{{end}}			
-            setHtml('main',parts.join("\n"));
+			{{end}}		
+		},
+		fix: function() {	
 			{{range .FixLines}}			
 			setClick('{{.Name}}',function() {
-                {{.Code}}
-            });
+                	{{.Code}}
+            		});
 			{{end}}
-        },
-        redisplay: function() {
+        	},
+        	redisplay: function() {
 			{{range .RedisplayLines}}
 			{{.}}
+			{{end}}
+		},
+		refix: function() {
+			{{range .Refixes}}			
+			setClick('{{.Name}}',function() {
+                	{{.Code}}
+            		});
 			{{end}}
 		},
 	},
@@ -61,6 +68,7 @@ type outPage struct {
 	SetLines       []string
 	FixLines       []fix
 	RedisplayLines []string
+	Refixes        []fix
 }
 type fix struct {
 	Name string
@@ -99,7 +107,7 @@ html, body {
 //<script>
 func genJsStart(w io.Writer) {
 	w.Write([]byte(compress(
-		`		var gd = {};
+		`var gd = {};
 var ld = {};
 var currentPage = 'start';
 var cp;
@@ -110,7 +118,10 @@ var setPage = function(pageName) {
     cp = pages[currentPage];
     if (!cp) console.error('unknown page: ' + currentPage);
     ld = {};
-    cp.set();
+    var parts = [];
+    cp.set(parts);
+    setHtml('main',parts.join("\n"));
+    cp.fix();
     console.log('displayed ' + currentPage);
 };
 var displayPage = function() {
