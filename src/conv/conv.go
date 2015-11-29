@@ -62,3 +62,9 @@ func main() {
 	}
 	genEnd(file)
 }
+func ifThenElse(p bool, st string, sf string) string {
+	if p {
+		return st
+	}
+	return sf
+}

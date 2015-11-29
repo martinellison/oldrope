@@ -68,7 +68,7 @@ func getTokens() {
 					scanState.state = convState
 					scanState.charPos += 2
 				case "$<":
-					emitToken(htmlTokenType)
+					emitToken(textTokenType)
 					scanState.state = htmlState
 					scanState.charPos += 2
 				default:

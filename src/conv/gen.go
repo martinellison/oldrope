@@ -27,21 +27,17 @@ func makeTemplate() {
 		},
 		fix: function() {	
 			{{range .FixLines}}			
-			setClick('{{.Name}}',function() {
-                	{{.Code}}
-            		});
+			{{.}}
 			{{end}}
         	},
-        	redisplay: function() {
+        redisplay: function() {
 			{{range .RedisplayLines}}
 			{{.}}
 			{{end}}
 		},
 		refix: function() {
 			{{range .Refixes}}			
-			setClick('{{.Name}}',function() {
-                	{{.Code}}
-            		});
+			{{.}}
 			{{end}}
 		},
 	},
@@ -66,14 +62,15 @@ type outData struct {
 type outPage struct {
 	Name           string
 	SetLines       []string
-	FixLines       []fix
+	FixLines       []string
 	RedisplayLines []string
-	Refixes        []fix
+	Refixes        []string
 }
-type fix struct {
+
+/*type fix struct {
 	Name string
 	Code string
-}
+}*/
 
 var theOutData outData
 
@@ -126,10 +123,11 @@ var setPage = function(pageName) {
 };
 var displayPage = function() {
     cp.redisplay();
+    cp.refix();
     console.log('redisplayed ' + currentPage);
 };
-var setHtml=function(id,text){document.getElementById(id).innerHTML = text;};
-var setClick=function(id,fn){document.getElementById(id).onclick=fn;};
+var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
+var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.onclick=fn;};
 `)))
 }
 func genJsEnd(w io.Writer) {

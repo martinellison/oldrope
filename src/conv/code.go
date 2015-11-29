@@ -16,7 +16,7 @@ func makeGenData() {
 	}
 }
 func makeOutPage(theName string) (theOutPage *outPage) {
-	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]fix, 0, 0), RedisplayLines: make([]string, 0, 0), Refixes: make([]fix, 0, 0)}
+	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]string, 0, 0), RedisplayLines: make([]string, 0, 0), Refixes: make([]string, 0, 0)}
 	return
 }
 func (theOutPage *outPage) codePage(thePage *page) {
@@ -35,7 +35,7 @@ var allSpace *regexp.Regexp
 
 func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
 
-func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
+func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 	//theOutFrag = new(outPage)
 	comprText := compress(theFragment.text)
 	escapeText := html.EscapeString(comprText)
@@ -45,62 +45,69 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 		fragName = fmt.Sprintf("z%d", autoLink)
 	}
 	theOutFrag.Name = fragName
-	fragIdExtendAttr := " id=\"" + fragName + "-x\" "
+	fragNameExtend := fragName + "-x"
 	fragIdAttr := " id=\"" + fragName + "\" "
+	fragIdExtendAttr := " id=\"" + fragNameExtend + "\" "
 	//	subset := true
 	switch theFragment.theFragType {
-	case spanFragType:
-		spanText := "parts.push('<span" + fragIdAttr + ">" + escapeText + "');"
-		theOutFrag.addLine(spanText, true)
-		theOutFrag.addLine("ld.s"+fragName+"=false;", true)
-		theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", false)
-	//	subset = false
-	case divFragType:
-		divText := "parts.push('<div" + fragIdAttr + ">" + escapeText + "');"
-		theOutFrag.addLine(divText, true)
-		theOutFrag.addLine("ld.s"+fragName+"=false;", true)
-		theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", false)
-	//	subset = false
+	case spanFragType, divFragType:
+		if topLevel {
+			tag := ifThenElse(theFragment.theFragType == spanFragType, "span", "div")
+			spanText := "parts.push('<" + tag + fragIdAttr + ">" + escapeText + "');"
+			theOutFrag.addLine(spanText, setLineType)
+			theOutFrag.addLine("ld.s"+fragName+"=false;", setLineType)
+			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", redisplayLineType)
+		} else {
+			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", setLineType)
+		}
 	case paraFragType:
 		paraText := "parts.push('<p" + fragIdAttr + ">" + escapeText + "');"
-		theOutFrag.addLine(paraText, true)
+		theOutFrag.addLine(paraText, setLineType)
 	case jsCodeFragType:
-		theOutFrag.addLine(comprText, true)
+		theOutFrag.addLine(comprText, setLineType)
 	case jsExprFragType:
 		exprText := "parts.push(" + comprText + ");"
-		theOutFrag.addLine(exprText, true)
+		theOutFrag.addLine(exprText, setLineType)
 	case textFragType:
 		if !allSpace.MatchString(escapeText) {
 			textText := "parts.push('" + escapeText + "');"
-			theOutFrag.addLine(textText, true)
+			theOutFrag.addLine(textText, setLineType)
 		}
 	case htmlFragType:
 		if !allSpace.MatchString(comprText) {
 			htmlText := "parts.push('<" + comprText + ">');"
-			theOutFrag.addLine(htmlText, true)
+			theOutFrag.addLine(htmlText, setLineType)
 		}
 	case linkFragType:
 		textText := "parts.push('<a" + fragIdExtendAttr + ">');"
-		theOutFrag.addLine(textText, true)
+		theOutFrag.addLine(textText, setLineType)
 		code := ""
 		if theFragment.auxName != "" {
 			code = " setPage('" + theFragment.auxName + "'); displayPage();"
 		} else {
 			code = " ld.s" + fragName + "=true; displayPage();"
 		}
-		linkFix := fix{Name: fragName + "-x", Code: code}
-		theOutFrag.FixLines = append(theOutFrag.FixLines, linkFix)
-		//theOutFrag.FixLines = []fix{linkFix}
+		//	if topLevel {
+		linkFix := "setClick('" + fragNameExtend + "', function(){" + code + "});"
+		theOutFrag.addLine(linkFix, fixLineType)
+		//	} else {
+		//		theOutFrag.addLine("if (ld.s"+fragName+") {", redisplayLineType)
+		//	}
+		if theFragment.auxName == "" {
+			theOutFrag.addLine("if (ld.s"+fragName+") {", redisplayLineType)
+			theOutFrag.addLine("if (ld.s"+fragName+") {", refixLineType)
+			theOutFrag.addLine("/*"+theFragment.name+"*/", refixLineType)
+		}
 	case includeFragType:
-		theOutFrag.addLine("pages."+theFragment.auxName+".set(parts);", true)
-		//??	theOutFrag.FixLines = append(theOutFrag.FixLines, "pages."+theFragment.auxName+".fix();")
-		theOutFrag.addLine("pages."+theFragment.auxName+".redisplay(parts);", false)
-	//??	theOutFrag.Refixes = append(theOutFrag.Refixes, "pages."+theFragment.auxName+".refix();")
+		theOutFrag.addLine("pages."+theFragment.auxName+".set(parts);", setLineType)
+		theOutFrag.addLine("pages."+theFragment.auxName+".fix();", fixLineType)
+		theOutFrag.addLine("pages."+theFragment.auxName+".redisplay();", redisplayLineType)
+		theOutFrag.addLine("pages."+theFragment.auxName+".refix();", refixLineType)
 	default:
 	}
 	for _, theFragment := range theFragment.theFragments {
 		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, true)
+		subOutFrag.codeFragment(theFragment, false)
 		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
 		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
@@ -108,7 +115,7 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 	}
 	for _, theFragment := range theFragment.actionFragments {
 		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, true)
+		subOutFrag.codeFragment(theFragment, false)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.SetLines...)
 		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.FixLines...)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
@@ -116,27 +123,55 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, set bool) {
 	}
 
 	switch theFragment.theFragType {
-	case spanFragType:
-		theOutFrag.addLine("parts.push('</span>');", true)
-		theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", false)
-	case divFragType:
-		theOutFrag.addLine("parts.push('</div>');", true)
-		theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", false)
+	case spanFragType, divFragType:
+		if topLevel {
+			tag := ifThenElse(theFragment.theFragType == spanFragType, "span", "div")
+			theOutFrag.addLine("parts.push('</"+tag+">');", setLineType)
+			theOutFrag.addLine("/*"+theFragment.name+"*/", redisplayLineType)
+			theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", redisplayLineType)
+		} else {
+			theOutFrag.addLine("/*"+theFragment.name+"*/", setLineType)
+			theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", setLineType)
+		}
 	case paraFragType:
-		theOutFrag.addLine("parts.push('</p>');", true)
+		theOutFrag.addLine("parts.push('</p>');", setLineType)
 	case linkFragType:
-		theOutFrag.addLine("parts.push('</a>');", true)
+		//theOutFrag.addLine("}", fixLineType)
+		theOutFrag.addLine("parts.push('</a>');", setLineType)
+		theOutFrag.addLine("/*"+theFragment.name+"*/", redisplayLineType)
+		if theFragment.auxName == "" {
+			if topLevel {
+				theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", redisplayLineType)
+			} else {
+				theOutFrag.addLine("}", redisplayLineType)
+			}
+			theOutFrag.addLine("/*"+theFragment.name+"*/", refixLineType)
+			theOutFrag.addLine("}", refixLineType)
+		}
 	default:
 	}
 }
 
 type fragCode struct {
 }
+type lineType int
 
-func (theOutPage *outPage) addLine(line string, set bool) {
-	if set {
+const (
+	setLineType lineType = iota
+	fixLineType
+	redisplayLineType
+	refixLineType
+)
+
+func (theOutPage *outPage) addLine(line string, theLineType lineType) {
+	switch theLineType {
+	case setLineType:
 		theOutPage.SetLines = append(theOutPage.SetLines, line)
-	} else {
+	case fixLineType:
+		theOutPage.FixLines = append(theOutPage.FixLines, line)
+	case redisplayLineType:
 		theOutPage.RedisplayLines = append(theOutPage.RedisplayLines, line)
+	case refixLineType:
+		theOutPage.Refixes = append(theOutPage.Refixes, line)
 	}
 }
