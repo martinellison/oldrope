@@ -54,6 +54,7 @@ func main() {
 	} else {
 		file.WriteString("<script>")
 	}
+	genHeader(jsFile)
 	genJsStart(jsFile)
 	expandTemplate(jsFile)
 	genJsEnd(jsFile)

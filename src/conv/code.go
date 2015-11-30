@@ -48,6 +48,12 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 	fragNameExtend := fragName + "-x"
 	fragIdAttr := " id=\"" + fragName + "\" "
 	fragIdExtendAttr := " id=\"" + fragNameExtend + "\" "
+	mainLT := setLineType
+	fixLT := fixLineType
+	if !topLevel {
+		mainLT = redisplayLineType
+		fixLT = refixLineType
+	}
 	//	subset := true
 	switch theFragment.theFragType {
 	case spanFragType, divFragType:
@@ -58,29 +64,29 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 			theOutFrag.addLine("ld.s"+fragName+"=false;", setLineType)
 			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", redisplayLineType)
 		} else {
-			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", setLineType)
+			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", redisplayLineType)
 		}
 	case paraFragType:
 		paraText := "parts.push('<p" + fragIdAttr + ">" + escapeText + "');"
-		theOutFrag.addLine(paraText, setLineType)
+		theOutFrag.addLine(paraText, mainLT)
 	case jsCodeFragType:
-		theOutFrag.addLine(comprText, setLineType)
+		theOutFrag.addLine(comprText, mainLT)
 	case jsExprFragType:
 		exprText := "parts.push(" + comprText + ");"
-		theOutFrag.addLine(exprText, setLineType)
+		theOutFrag.addLine(exprText, mainLT)
 	case textFragType:
 		if !allSpace.MatchString(escapeText) {
 			textText := "parts.push('" + escapeText + "');"
-			theOutFrag.addLine(textText, setLineType)
+			theOutFrag.addLine(textText, mainLT)
 		}
 	case htmlFragType:
 		if !allSpace.MatchString(comprText) {
 			htmlText := "parts.push('<" + comprText + ">');"
-			theOutFrag.addLine(htmlText, setLineType)
+			theOutFrag.addLine(htmlText, mainLT)
 		}
 	case linkFragType:
 		textText := "parts.push('<a" + fragIdExtendAttr + ">');"
-		theOutFrag.addLine(textText, setLineType)
+		theOutFrag.addLine(textText, mainLT)
 		code := ""
 		if theFragment.auxName != "" {
 			code = " setPage('" + theFragment.auxName + "'); displayPage();"
@@ -89,14 +95,14 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 		}
 		//	if topLevel {
 		linkFix := "setClick('" + fragNameExtend + "', function(){" + code + "});"
-		theOutFrag.addLine(linkFix, fixLineType)
+		theOutFrag.addLine(linkFix, fixLT)
 		//	} else {
 		//		theOutFrag.addLine("if (ld.s"+fragName+") {", redisplayLineType)
 		//	}
 		if theFragment.auxName == "" {
-			theOutFrag.addLine("if (ld.s"+fragName+") {", redisplayLineType)
-			theOutFrag.addLine("if (ld.s"+fragName+") {", refixLineType)
-			theOutFrag.addLine("/*"+theFragment.name+"*/", refixLineType)
+			theOutFrag.addLine("if (ld.s"+fragName+") {", mainLT)
+			theOutFrag.addLine("if (ld.s"+fragName+") {", fixLT)
+			theOutFrag.addLine("/*"+theFragment.name+"*/", fixLT)
 		}
 	case includeFragType:
 		theOutFrag.addLine("pages."+theFragment.auxName+".set(parts);", setLineType)
@@ -116,8 +122,8 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 	for _, theFragment := range theFragment.actionFragments {
 		subOutFrag := makeOutPage(theFragment.name)
 		subOutFrag.codeFragment(theFragment, false)
-		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.SetLines...)
-		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.FixLines...)
+		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
 		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
 		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
 	}
@@ -134,19 +140,19 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 			theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", setLineType)
 		}
 	case paraFragType:
-		theOutFrag.addLine("parts.push('</p>');", setLineType)
+		theOutFrag.addLine("parts.push('</p>');", mainLT)
 	case linkFragType:
 		//theOutFrag.addLine("}", fixLineType)
-		theOutFrag.addLine("parts.push('</a>');", setLineType)
+		theOutFrag.addLine("parts.push('</a>');", mainLT)
 		theOutFrag.addLine("/*"+theFragment.name+"*/", redisplayLineType)
 		if theFragment.auxName == "" {
 			if topLevel {
-				theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", redisplayLineType)
+				theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", mainLT)
 			} else {
-				theOutFrag.addLine("}", redisplayLineType)
+				theOutFrag.addLine("}", mainLT)
 			}
-			theOutFrag.addLine("/*"+theFragment.name+"*/", refixLineType)
-			theOutFrag.addLine("}", refixLineType)
+			theOutFrag.addLine("/*"+theFragment.name+"*/", fixLT)
+			theOutFrag.addLine("}", fixLT)
 		}
 	default:
 	}

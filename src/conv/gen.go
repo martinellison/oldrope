@@ -2,10 +2,12 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"regexp"
 	"text/template"
+	"time"
 )
 
 //func main() {
@@ -23,10 +25,10 @@ func makeTemplate() {
 	 	set: function(parts) {
 			{{range .SetLines}}
 			{{.}}
-			{{end}}		
+			{{end}}
 		},
-		fix: function() {	
-			{{range .FixLines}}			
+		fix: function() {
+			{{range .FixLines}}
 			{{.}}
 			{{end}}
         	},
@@ -36,7 +38,7 @@ func makeTemplate() {
 			{{end}}
 		},
 		refix: function() {
-			{{range .Refixes}}			
+			{{range .Refixes}}
 			{{.}}
 			{{end}}
 		},
@@ -85,7 +87,7 @@ func genStart(w io.Writer) {
 		`<!DOCTYPE html>
 <html>
 <head>
-<meta charset='UTF-8'/> 
+<meta charset='UTF-8'/>
  <style>a {
     color: blue;
     text-decoration: underline;
@@ -101,7 +103,9 @@ html, body {
 `)))
 }
 
-//<script>
+func genHeader(w io.Writer) {
+	w.Write([]byte(fmt.Sprintf("/* created by program on %s */", time.Now())))
+}
 func genJsStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`var gd = {};
