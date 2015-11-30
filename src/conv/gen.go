@@ -22,26 +22,21 @@ func makeTemplate() {
 	var err error
 	templateText := compress(`pages = {
 	{{range .Pages}} {{.Name}}: {
-	 	set: function(parts) {
-			{{range .SetLines}}
+	 	init: function() {
+			{{range .InitLines}}
 			{{.}}
 			{{end}}
 		},
-		fix: function() {
+		display: function(parts) {
+			{{range .SetLines}}
+			{{.}}
+			{{end}}
+        	},
+		fix: function(parts) {
 			{{range .FixLines}}
 			{{.}}
 			{{end}}
         	},
-        redisplay: function() {
-			{{range .RedisplayLines}}
-			{{.}}
-			{{end}}
-		},
-		refix: function() {
-			{{range .Refixes}}
-			{{.}}
-			{{end}}
-		},
 	},
 	{{end}}
 	};`)
@@ -57,22 +52,6 @@ func init() {
 	whiteSpaceRegex = regexp.MustCompile(`[\s]+`)
 }
 func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
-
-type outData struct {
-	Pages []*outPage
-}
-type outPage struct {
-	Name           string
-	SetLines       []string
-	FixLines       []string
-	RedisplayLines []string
-	Refixes        []string
-}
-
-/*type fix struct {
-	Name string
-	Code string
-}*/
 
 var theOutData outData
 
@@ -113,25 +92,23 @@ var ld = {};
 var currentPage = 'start';
 var cp;
 var pages;
-var setPage = function(pageName) {
-    console.log('displaying page: ' + pageName);
-    currentPage = pageName;
+var displayPage = function() { var parts = [];
     cp = pages[currentPage];
     if (!cp) console.error('unknown page: ' + currentPage);
-    ld = {};
-    var parts = [];
-    cp.set(parts);
+    cp.display(parts);
     setHtml('main',parts.join("\n"));
     cp.fix();
     console.log('displayed ' + currentPage);
 };
-var displayPage = function() {
-    cp.redisplay();
-    cp.refix();
-    console.log('redisplayed ' + currentPage);
+var setPage = function(pageName) {
+    console.log('displaying page: ' + pageName);
+    currentPage = pageName;
+    ld = {};
+	df = {};
+	displayPage();
 };
 var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
-var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.onclick=fn;};
+var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)console.log('no '+id);else elt.onclick=fn;};
 `)))
 }
 func genJsEnd(w io.Writer) {

@@ -26,19 +26,19 @@ $[page OfficerGrommitt ]$
 Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
 
 ${if (gd.haveRing) {}$
-You have already looked at the victim.
+$<p>$You have already looked at the victim.
 ${} else {}$
-$[link]$"Ask to look at the corpse"$[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
+$<p>$$[link]$Ask to look at the corpse$[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
 
-$[link]$"Examine the body"$[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
+$<p>$$[link]$Examine the body$[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
 ${gd.haveRing = true;}$$[end]$
 $[end]$
 ${}}$
 
-$[include Inventory]$)
+$[include Inventory]$
 
-$[link]$Go the the crime scene$[goto CrimeScene]$
+$<p>$$[link]$Go the the crime scene$[goto CrimeScene]$
 $[page Inventory]$
 ${if (gd.haveRing) {}$
-You have a small scarab ring from the victim.
+$<p>$You have a small scarab ring from the victim.
 ${}}$
