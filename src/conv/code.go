@@ -122,9 +122,9 @@ func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
 	for _, theFragment := range theFragment.actionFragments {
 		subOutFrag := makeOutPage(theFragment.name)
 		subOutFrag.codeFragment(theFragment, false)
-		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
 		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
-		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
+		theOutFrag.FixLines = append(theOutFrag.RedisplayLines, subOutFrag.FixLines...)
 		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
 	}
 
