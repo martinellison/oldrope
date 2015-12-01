@@ -35,7 +35,7 @@ func main() {
 	go parse()
 	<-linesDone
 	if logging {
-		log.Print("all done.")
+		log.Print("all lines scanned and parsed.")
 	}
 	dumpPages()
 	makeTemplate()
@@ -69,6 +69,9 @@ func main() {
 		file.WriteString("</script>")
 	}
 	genEnd(file)
+	if logging {
+		log.Print("file generated.")
+	}
 }
 func ifThenElse(p bool, st string, sf string) string {
 	if p {

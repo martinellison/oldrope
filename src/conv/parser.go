@@ -6,26 +6,28 @@ import (
 	"log"
 )
 
-func dumpTokens() {
-	if logging {
-		log.Print("dumping tokens...")
-	}
-	for {
-		if logging {
-			log.Print("waiting for token")
-		}
-		var theToken token
-		theToken = <-tokenChan
-		if theToken.theType == eofTokenType {
-			break
-		}
-		log.Printf("%d: %s", theToken.lineNumber, theToken.text)
-	}
-	if logging {
-		log.Print("all tokens read")
-	}
-	linesDone <- 1
-}
+//func dumpTokens() {
+//	if logging {
+//		log.Print("dumping tokens...")
+//	}
+//	for {
+//		if logging {
+//			log.Print("waiting for token")
+//		}
+//		var theToken token
+//		theToken = <-tokenChan
+//		if theToken.theType == eofTokenType {
+//			break
+//		}
+//		if logging {
+//		log.Printf("%d: token  %s", theToken.lineNumber, theToken.text)
+//			}
+//	}
+//	if logging {
+//		log.Print("all tokens read")
+//	}
+//	linesDone <- 1
+//}
 
 var theParser struct {
 	theCurrentToken token
@@ -39,10 +41,13 @@ func parse() {
 			case "page":
 				parsePage()
 			default:
-				reportError(fmt.Sprintf("unknown ident: %s", theParser.theCurrentToken.text), theParser.theCurrentToken.lineNumber)
+				reportError(fmt.Sprintf("unknown identifier: %s", theParser.theCurrentToken.text), theParser.theCurrentToken.lineNumber)
 				getToken()
 			}
 		} else {
+			if !isAllSpace(tokText()) {
+				reportError(fmt.Sprintf("not in directive: %s", tokText()), theParser.theCurrentToken.lineNumber)
+			}
 			getToken()
 		}
 	}
@@ -51,7 +56,7 @@ func parsePage() {
 	expectIdent("page")
 	pageName := tokText()
 	if logging {
-		log.Printf("page name: %s", pageName)
+		log.Printf("page name: '%s'", pageName)
 	}
 	getToken()
 	thePage := page{local: make([]string, 0), theFragmentsByName: make(map[string]*fragment, 0), theName: pageName}
@@ -72,6 +77,9 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 	theFragments = make([]*fragment, 0)
 	for !stopped(stopIdents) {
 		theFragment := &fragment{theFragments: make([]*fragment, 0), name: "", text: "", auxName: "", actionFragments: make([]*fragment, 0)}
+		if logging {
+			log.Printf("getting fragment with token: %s", tokText())
+		}
 		switch tokTyp() {
 		case identTokenType:
 			switch tokText() {
@@ -172,10 +180,11 @@ func stopped(stopIdents []string) bool {
 
 func getToken() {
 	theParser.theCurrentToken = <-tokenChan
-	if tokTyp() == eofTokenType {
-		if logging {
-			log.Printf("end of input")
-		}
+	if logging {
+		log.Printf("parsing token: '%s'", theParser.theCurrentToken.text)
+	}
+	if tokTyp() == eofTokenType && logging {
+		log.Printf("end of input")
 	}
 }
 func tokTyp() tokenType { return theParser.theCurrentToken.theType }
@@ -261,17 +270,18 @@ func dumpPages() {
 	if !logging {
 		return
 	}
+	log.Print("pages as parsed:")
 	for _, page := range thePageSet {
-		fmt.Printf("--- page %s ---\n", page.theName)
+		log.Printf("--- page %s ---\n", page.theName)
 		for _, fr := range page.theFragments {
 			dumpFragment(fr, "\t")
 		}
 	}
 }
 func dumpFragment(fr *fragment, indent string) {
-	fmt.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType, fr.text)
+	log.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType, fr.text)
 	if fr.auxName != "" {
-		fmt.Printf("%sgoto:%s\n", indent, fr.auxName)
+		log.Printf("%sgoto:%s\n", indent, fr.auxName)
 	}
 	for _, fr := range fr.theFragments {
 		dumpFragment(fr, indent+"\tf: ")

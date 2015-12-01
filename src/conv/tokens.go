@@ -38,13 +38,8 @@ func getTokens() {
 	setTokenState(textState)
 	for {
 		scanState.line = <-lineChan
-		if scanState.line.eof {
-			tokenChan <- token{theType: eofTokenType}
-			linesDone <- 1
-			break
-		}
 		if logging {
-			log.Printf("%d: %s (%d)", scanState.line.number, scanState.line.text, len(scanState.line.text))
+			log.Printf("%d inline: %s (%d)", scanState.line.number, scanState.line.text, len(scanState.line.text))
 		}
 		scanState.lineLen = len(scanState.line.text)
 		scanState.charPos = 0
@@ -118,24 +113,39 @@ func getTokens() {
 					charToToken()
 				}
 			default:
+				reportError("internal error, unknown scan state", scanState.line.number)
 				log.Fatalf("unknown scan state: %d", scanState.state)
 			}
+		}
+		if scanState.line.eof {
+			if logging {
+				log.Print("in lines at eof, emitting eof token")
+			}
+			break
 		}
 	}
 	switch scanState.state {
 	case textState:
 		emitToken(textTokenType)
+		if logging {
+			log.Print("in text at end")
+		}
 	case commentState:
 		reportError("in comment at end", scanState.line.number)
 	case jsCodeState:
 		emitToken(jsCodeTokenType)
+		reportError("in code at end", scanState.line.number)
 	case jsExprState:
 		emitToken(jsExprTokenType)
+		reportError("in expression at end", scanState.line.number)
 	case convState:
-		//emitToken(convTokenType)
+		reportError("in directive at end", scanState.line.number)
 	case htmlState:
 		emitToken(htmlTokenType)
+		reportError("in html at end", scanState.line.number)
 	}
+	emitToken(eofTokenType)
+	linesDone <- 1
 	if logging {
 		log.Print("all lines read")
 	}
@@ -222,7 +232,9 @@ func setTokenState(newState scanLineState) {
 }
 func emitToken(theTokenType tokenType) {
 	tokenText := string(scanState.tokenText)
-	//log.Printf("emitting token: %s", tokenText)
+	if logging {
+		log.Printf("emitting token: %s", tokenText)
+	}
 	theToken := token{theType: theTokenType, text: tokenText, lineNumber: scanState.line.number}
 	scanState.tokenText = make([]byte, 0)
 	tokenChan <- theToken

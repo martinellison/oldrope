@@ -41,7 +41,8 @@ func (theOutPage *outPage) codePage(thePage *page) {
 var autoLink int
 var allSpace *regexp.Regexp
 
-func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
+func init()                    { allSpace = regexp.MustCompile(`^[\s]*$`) }
+func isAllSpace(s string) bool { return allSpace.MatchString(s) }
 
 type outFragment struct {
 	InitLines []string
@@ -131,5 +132,5 @@ func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outF
 	theOutFragment.FixLines = append(theOutFragment.FixLines, theOutSubfragment.FixLines...)
 }
 
-type fragCode struct {
-}
+//type fragCode struct {
+//}
