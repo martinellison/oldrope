@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-var logging bool
+var logging, hashText bool
 
 func main() {
 	var inFileName, outFileName, baseDir, jsFileName, logFileName string
@@ -18,6 +18,7 @@ func main() {
 	flag.StringVar(&outFileName, "out", "testout.html", "output file name")
 	flag.StringVar(&jsFileName, "jsout", "", "Javascript output file name (if not specified, Javascript will be embedded in the HTML)")
 	flag.StringVar(&logFileName, "log", "", "log file name (for debugging)")
+	flag.BoolVar(&hashText, "hash", false, "use hash escapes for text")
 	flag.BoolVar(&help, "help", false, "display help")
 	flag.BoolVar(&help, "h", false, "display help")
 	flag.Parse()
@@ -95,5 +96,5 @@ func initLog(filePrefix, logFileName string) {
 	logging = true
 }
 func reportError(msg string, lineNumber int) {
-	os.Stderr.WriteString(fmt.Sprintf("(%d): %s", lineNumber, msg))
+	os.Stderr.WriteString(fmt.Sprintf("(%d): %s\n", lineNumber, msg))
 }

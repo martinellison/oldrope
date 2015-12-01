@@ -132,7 +132,7 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 				theFragment.auxName = tokText()
 				getToken() //target
 			default:
-				reportError(fmt.Sprintf("unknown ident: %s", tokText()), theParser.theCurrentToken.lineNumber)
+				reportError(fmt.Sprintf("unknown directive: %s", tokText()), theParser.theCurrentToken.lineNumber)
 				getToken()
 				getToken()
 			}

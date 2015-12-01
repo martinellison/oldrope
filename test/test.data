@@ -1,44 +1,70 @@
 $[page start]$
-You are sitting in the Guard's office as usual, when the Chief comes in. 
+$<p>$You are sitting in the Guard's office as usual, when the Chief comes in. 
 
-"I think $[link ]$something has come up$[goto Briefing]$", he says.
-$/gd.haveRing = false;/$
+$<p>$"I think $[link]$something has come up$[goto Briefing]$", he says.
+$/gd={haveRing: false, money: 0, maktor: false, oweMaktor: false};/$
 $[page Briefing]$
-"It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
+$<p>$"It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
 
-"Here is some $[link report]$more information$[end]$ from the guard post", he adds. $[span report]$"Officer Grommitt discovered the body of a man about 30 years old during his patrol of Thieves' Alley early this morning. There were no apparent injuries, but quick magic testing showed a very high degree of magic had been used against him. Grommitt's commander, Officer Sqiggs, recommends that the Special Squad be called in."$[end]$
+$<p>$"Here is some $[link report]$more information$[end]$ from the guard post", he adds. $[span report]$"Officer Grommitt discovered the body of a man about 30 years old during his patrol of Thieves' Alley early this morning. There were no apparent injuries, but quick magic testing showed a very high degree of magic had been used against him. Grommitt's commander, Officer Sqiggs, recommends that the Special Squad be called in."$[end]$
 $<ul>$
-$<li>$$[link]$Proceed to the scene of the crime$[goto CrimeScene]$?
-$<li>$$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$?
+$[include CityOptions]$
 $</ul>$
 $[page CrimeScene]$
-Thieves' Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. A $[link boy]$small boy$[end]$ looks at you askance from a doorway. 
-$[include Inventory]$
+$<p>$Thieves' Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. A $[link boy]$small boy$[end]$ looks at you askance from a doorway.
 
 $[div boy]$"I saw nothing", he says. 
 $<ul><li>$$[link]$Ignore him.$[act]$ $[end]$
 $<li>$$[link]$Stare at him$[act]$"Threekins wasn't even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.$[end]$
 $[end]$
-
-$<ul><li>$$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$
-$<li>$$[link]$Wander down one of the passageways$[act]$As you get further into the passageway, it gets darker and darker. Then you feel a cosh smash into the back of your head.$[end]$$</ul>$
+$<ul><li>$$[link]$Wander down one of the passageways$[act]$As you get further into the passageway, it gets darker and darker. But you do not find anything of interest.$[end]$
+$[include CityOptions]$
+$</ul>$ 
+$[include Inventory]$
 $[page OfficerGrommitt ]$
-Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
-
+$<p>$Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
+$<ul>$
 $/if (gd.haveRing) {/$
 $<p>$You have already looked at the victim.
 $/} else {/$
-$<p>$$[link]$Ask to look at the corpse$[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
+$<li>$$[link]$Ask to look at the corpse. $[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
 
-$<p>$$[link]$Examine the body$[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
+$<li>$$[link]$Examine the body. $[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
 $/gd.haveRing = true;/$$[end]$
 $[end]$
 $/}/$
-
+$[include CityOptions]$
+$</ul>$
 $[include Inventory]$
-
-$<p>$$[link]$Go the the crime scene$[goto CrimeScene]$
+$[page RingMerchant]$
+$<p>$You walk down to the markets and look for a ring merchant. You come to a shop with rich materials. Inside there is a little old lady.
+$<ul>$
+$/if (gd.haveRing) {/$
+$<li>$$[link]$Show her the ring. $[act]$"Now that is very interesting, Officer", she says. "I have not seen one of those for a long time. I have a friend called Maktor who could investigate the ring for you. But he may want a favour in return some day." $/gd.maktor=true;/$
+$[end]$
+$<li>$$[link]$Offer to sell her the ring.$[act]$After some negotiation, she agrees to buy the ring from you for 1000 copper pieces. 
+$/gd.money += 1000; gd.haveRing=false;/$
+$[end]$
+$/}/$
+$[include CityOptions]$
+$</ul>$
+$[include Inventory]$
+$[page Maktor]$$<p>$The ring merchant leads you to an upper room in a nearby building. Maktor is a tall, lean man with long fingers. He is dressed entirely in black. She shows Maktor the ring. He examines it carefully.
+$<p>$"That is a ring from the $<i>$tradhe$</i>$", he says. "You might call them fairies, but that is the name by which the call themselves. If you want to know more of it, you will need to visit the $<i>$tradhe$</i>$ in the forest."
+$<p>$He adds, "Now I have been a good citizen and helped you, but one day, perhaps, I will need your help, so remember me."
+$/gd.oweMaktor=true;/$
+$<ul>$
+$[include CityOptions]$
+$</ul>$
+$[include Inventory]$
 $[page Inventory]$
 $/if (gd.haveRing) {/$
 $<p>$You have a small scarab ring from the victim.
+$/} if (gd.money > 0) {/$
+You have $( gd.money )$ copper pieces.
 $/}/$
+$[page CityOptions]$
+$/if (gd.haveRing&&currentPage!='RingMerchant'){/$$<li>$$[link]$Visit a ring merchant$[goto RingMerchant]$$/}/$
+$/if (currentPage!='CrimeScene'){/$$<li>$$[link]$Proceed to the scene of the crime$[goto CrimeScene]$$/}/$
+$/if (currentPage!='OfficerGrommitt'){/$$<li>$$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$$/}/$
+$/if (currentPage!='Maktor'&&gd.maktor){/$$<li>$$[link]$Visit Maktor$[goto Maktor]$$/}/$
