@@ -10,12 +10,6 @@ import (
 	"time"
 )
 
-//func main() {
-//	makeTemplate()
-//	makeTestData()
-//	expandTemplate(os.Stdout)
-//}
-
 var templ *template.Template
 
 func makeTemplate() {

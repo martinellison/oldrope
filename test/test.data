@@ -2,7 +2,7 @@ $[page start]$
 You are sitting in the Guard's office as usual, when the Chief comes in. 
 
 "I think $[link ]$something has come up$[goto Briefing]$", he says.
-${gd.haveRing = false;}$
+$/gd.haveRing = false;/$
 $[page Briefing]$
 "It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
 
@@ -25,20 +25,20 @@ $<li>$$[link]$Wander down one of the passageways$[act]$As you get further into t
 $[page OfficerGrommitt ]$
 Officer Grommitt paces nervously back and forth in the small watch room. "It was really strange", he says. "There didn't seem to be any marks on the body at all. But when I ran a magic check on him, it came up bright orange. Somehow someone used a lot of magic on this guy, whoever he was."
 
-${if (gd.haveRing) {}$
+$/if (gd.haveRing) {/$
 $<p>$You have already looked at the victim.
-${} else {}$
+$/} else {/$
 $<p>$$[link]$Ask to look at the corpse$[act]$"Could I see the victim?", you ask. Officer Grommitt takes you into the store room, where there is a dead body. 
 
 $<p>$$[link]$Examine the body$[act]$When you examine the corpse, you discover he has a small scarab ring on his finger. You take the ring and place it in your bag.
-${gd.haveRing = true;}$$[end]$
+$/gd.haveRing = true;/$$[end]$
 $[end]$
-${}}$
+$/}/$
 
 $[include Inventory]$
 
 $<p>$$[link]$Go the the crime scene$[goto CrimeScene]$
 $[page Inventory]$
-${if (gd.haveRing) {}$
+$/if (gd.haveRing) {/$
 $<p>$You have a small scarab ring from the victim.
-${}}$
+$/}/$

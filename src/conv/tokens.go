@@ -43,7 +43,9 @@ func getTokens() {
 			linesDone <- 1
 			break
 		}
-		log.Printf("%d: %s (%d)", scanState.line.number, scanState.line.text, len(scanState.line.text))
+		if logging {
+			log.Printf("%d: %s (%d)", scanState.line.number, scanState.line.text, len(scanState.line.text))
+		}
 		scanState.lineLen = len(scanState.line.text)
 		scanState.charPos = 0
 		for scanState.charPos < scanState.lineLen {
@@ -55,7 +57,7 @@ func getTokens() {
 					emitToken(textTokenType)
 					scanState.state = commentState
 					scanState.charPos += 2
-				case "${":
+				case "$/":
 					emitToken(textTokenType)
 					scanState.state = jsCodeState
 					scanState.charPos += 2
@@ -76,14 +78,14 @@ func getTokens() {
 				}
 			case commentState:
 				if scanChars(2) == "*/" {
-					//log.Print("end of comment")
+					//if logging {if logging {log.Print("end of comment")
 					setTokenState(textState)
 					scanState.charPos += 2
 				} else {
 					scanState.charPos++
 				}
 			case jsCodeState:
-				if scanChars(2) == "}$" {
+				if scanChars(2) == "/$" {
 					emitToken(jsCodeTokenType)
 					scanState.state = textState
 					scanState.charPos += 2
@@ -124,7 +126,7 @@ func getTokens() {
 	case textState:
 		emitToken(textTokenType)
 	case commentState:
-		log.Print("in comment at end!")
+		reportError("in comment at end", scanState.line.number)
 	case jsCodeState:
 		emitToken(jsCodeTokenType)
 	case jsExprState:
@@ -134,7 +136,9 @@ func getTokens() {
 	case htmlState:
 		emitToken(htmlTokenType)
 	}
-	log.Print("all lines read")
+	if logging {
+		log.Print("all lines read")
+	}
 }
 func getConvToken() {
 	examineNextChar()
@@ -197,14 +201,14 @@ func charToToken() {
 	currentChar := scanState.line.text[scanState.charPos]
 	scanState.tokenText = append(scanState.tokenText, currentChar)
 	//	if scanState.charPos >= scanState.lineLen {
-	//		log.Print("ran off end of line!")
+	//		if logging {if logging {log.Print("ran off end of line!")
 	//	}
 	scanState.charPos++
 	examineNextChar()
 }
 func examineNextChar() {
 	if scanState.charPos >= scanState.lineLen {
-		//log.Print("at end of line")
+		//if logging {if logging {log.Print("at end of line")
 		scanState.nextCharType = stopCharType
 		scanState.more = false
 		return

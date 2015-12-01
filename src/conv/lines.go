@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -20,6 +21,7 @@ func getLines(path string) {
 	lineNumber := 0
 	file, err := os.Open(path)
 	if err != nil {
+		reportError(fmt.Sprintf("get lines open err: %v", err), lineNumber)
 		log.Printf("get lines open err: %v", err)
 		return
 	}
@@ -35,11 +37,16 @@ func getLines(path string) {
 		err = nil
 	}
 	if err != nil {
+		reportError(fmt.Sprintf("read error: %v", err), lineNumber)
 		log.Printf("read error: %v", err)
 	}
 	lineChan <- scanLine{eof: true}
 	if err != nil {
+		reportError(fmt.Sprintf("get lines err: %v", err), lineNumber)
 		log.Printf("get lines err: %v", err)
+
 	}
-	log.Printf("%d lines read", lineNumber)
+	if logging {
+		log.Printf("%d lines read", lineNumber)
+	}
 }
