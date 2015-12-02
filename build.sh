@@ -1,5 +1,6 @@
-cd ~/git/twine 
-export GOPATH=~/git/twine 
+export BASE=$(git rev-parse --show-toplevel)
+cd $BASE
+export GOPATH=$BASE 
 go fmt conv
 FMTRES=$?
 if [[ $FMTRES != 0 ]]

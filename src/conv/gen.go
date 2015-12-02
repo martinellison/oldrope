@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-var templ *template.Template
+/* */ var templ *template.Template
 
-func makeTemplate() {
+/* */ func makeTemplate() {
 	var err error
 	templateText := compress(`pages = {
 	{{range .Pages}} {{.Name}}: {
@@ -40,54 +40,56 @@ func makeTemplate() {
 	}
 }
 
-var whiteSpaceRegex *regexp.Regexp
+/* */ var whiteSpaceRegex *regexp.Regexp
 
-func init() {
+/* */ func init() {
 	whiteSpaceRegex = regexp.MustCompile(`[\s]+`)
 }
-func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
 
-var theOutData outData
+/* */ func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
 
-func expandTemplate(w io.Writer) {
+/* */ var theOutData outData
+
+/* */ func expandTemplate(w io.Writer) {
 	err := templ.Execute(w, theOutData)
 	if err != nil {
 		log.Fatalf("template exp error: %v", err)
 	}
 }
-func genStart(w io.Writer) {
+
+/* */ func genStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`<!DOCTYPE html>
 <html>
 <head>
 <meta charset='UTF-8'/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
- <style>a {
+<style>
+a {
     color: blue;
     text-decoration: underline;
     cursor: pointer;
 }
-html, body {
-    color: black;
-    font-family: Georgia, serif;
-}</style>
+html, body {color: black; font-family: Georgia, serif;}
+</style>
 </head>
 <body>
 <div id='main'> </div>
 `)))
 }
 
-func genHeader(w io.Writer) {
+/* */ func genHeader(w io.Writer) {
 	w.Write([]byte(fmt.Sprintf("/* created by program on %s */", time.Now())))
 }
-func genJsStart(w io.Writer) {
+
+/* */ func genJsStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`var gd = {};
-var ld = {};
-var currentPage = 'start';
-var cp;
-var pages;
-var displayPage = function() { var parts = [];
+/* */ var ld = {};
+/* */ var currentPage = 'start';
+/* */ var cp;
+/* */ var pages;
+/* */ var displayPage = function() { var parts = [];
     cp = pages[currentPage];
     if (!cp) console.error('unknown page: ' + currentPage);
     cp.display(parts);
@@ -95,24 +97,26 @@ var displayPage = function() { var parts = [];
     cp.fix();
     console.log('displayed ' + currentPage);
 };
-var setPage = function(pageName) {
+/* */ var setPage = function(pageName) {
     console.log('displaying page: ' + pageName);
     currentPage = pageName;
     ld = {};
 	df = {};
 	displayPage();
 };
-var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
-var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)console.log('no '+id);else elt.onclick=fn;};
+/* */ var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
+/* */ var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)console.log('no '+id);else elt.onclick=fn;};
 `)))
 }
-func genJsEnd(w io.Writer) {
+
+/* */ func genJsEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');
 displayPage();
 console.log('script loaded');
 `)))
 }
-func genEnd(w io.Writer) {
+
+/* */ func genEnd(w io.Writer) {
 	w.Write([]byte(compress(`</body>
 </html>`)))
 }

@@ -3,12 +3,14 @@ package main
 
 import "log"
 
+/* token describes a token from the input */
 type token struct {
 	theType    tokenType
 	text       string
 	lineNumber int
 }
-type tokenType int
+
+/* */ type tokenType int
 
 const (
 	eofTokenType tokenType = iota
@@ -21,9 +23,9 @@ const (
 	htmlTokenType
 )
 
-var tokenChan chan token
+/* */ var tokenChan chan token
 
-type scanLineState int
+/* */ type scanLineState int
 
 const (
 	textState scanLineState = iota
@@ -34,7 +36,7 @@ const (
 	htmlState
 )
 
-func getTokens() {
+/* */ func getTokens() {
 	setTokenState(textState)
 	for {
 		scanState.line = <-lineChan
@@ -150,7 +152,8 @@ func getTokens() {
 		log.Print("all lines read")
 	}
 }
-func getConvToken() {
+
+/* */ func getConvToken() {
 	examineNextChar()
 	//log.Printf("looking for conv token, examining from: %c at: %d type: %s", scanState.nextChar, scanState.charPos, scanState.nextCharType)
 	switch scanState.nextCharType {
@@ -188,7 +191,7 @@ func getConvToken() {
 	}
 }
 
-var scanState struct {
+/* */ var scanState struct {
 	lineLen      int
 	charPos      int
 	line         scanLine
@@ -199,7 +202,7 @@ var scanState struct {
 	more         bool
 }
 
-func scanChars(leng int) (chars string) {
+/* */ func scanChars(leng int) (chars string) {
 	useLen := leng
 	if leng+scanState.charPos > scanState.lineLen {
 		useLen = scanState.lineLen - scanState.charPos
@@ -207,7 +210,8 @@ func scanChars(leng int) (chars string) {
 	}
 	return scanState.line.text[scanState.charPos : scanState.charPos+useLen]
 }
-func charToToken() {
+
+/* */ func charToToken() {
 	currentChar := scanState.line.text[scanState.charPos]
 	scanState.tokenText = append(scanState.tokenText, currentChar)
 	//	if scanState.charPos >= scanState.lineLen {
@@ -216,7 +220,8 @@ func charToToken() {
 	scanState.charPos++
 	examineNextChar()
 }
-func examineNextChar() {
+
+/* */ func examineNextChar() {
 	if scanState.charPos >= scanState.lineLen {
 		//if logging {if logging {log.Print("at end of line")
 		scanState.nextCharType = stopCharType
@@ -226,11 +231,13 @@ func examineNextChar() {
 	scanState.nextChar = scanState.line.text[scanState.charPos]
 	scanState.nextCharType = charTypes[scanState.nextChar]
 }
-func setTokenState(newState scanLineState) {
+
+/* */ func setTokenState(newState scanLineState) {
 	scanState.state = newState
 	scanState.tokenText = make([]byte, 0)
 }
-func emitToken(theTokenType tokenType) {
+
+/* */ func emitToken(theTokenType tokenType) {
 	tokenText := string(scanState.tokenText)
 	if logging {
 		log.Printf("emitting token: %s", tokenText)
@@ -240,7 +247,7 @@ func emitToken(theTokenType tokenType) {
 	tokenChan <- theToken
 }
 
-type charType int
+/* */ type charType int
 
 const (
 	identCharType charType = iota
@@ -251,7 +258,7 @@ const (
 	otherCharType
 )
 
-func (theCharType charType) String() string {
+/* */ func (theCharType charType) String() string {
 	switch theCharType {
 	case identCharType:
 		return "ident"
@@ -270,9 +277,9 @@ func (theCharType charType) String() string {
 	}
 }
 
-var charTypes []charType
+/* */ var charTypes []charType
 
-func init() {
+/* */ func init() {
 	charTypes = make([]charType, 256)
 	for index := range charTypes {
 		charTypes[index] = otherCharType

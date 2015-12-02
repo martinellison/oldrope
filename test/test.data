@@ -2,7 +2,7 @@ $[page start]$
 $<p>$You are sitting in the Guard's office as usual, when the Chief comes in. 
 
 $<p>$"I think $[link]$something has come up$[goto Briefing]$", he says.
-$/gd={haveRing: false, money: 0, maktor: false, oweMaktor: false};/$
+$/gd={haveRing: false, money: 0, maktor: false, oweMaktor: false, knowWitch: false, knowFairy: false};/$
 $[page Briefing]$
 $<p>$"It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
 
@@ -10,14 +10,15 @@ $<p>$"Here is some $[link report]$more information$[end]$ from the guard post", 
 $<ul>$
 $[include CityOptions]$
 $</ul>$
-$[page CrimeScene]$
-$<p>$Thieves' Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. A $[link boy]$small boy$[end]$ looks at you askance from a doorway.
+$[page CrimeScene]$ $/gd.ld={boy: true, dog: false};/$
+$<p>$Thieves' Alley looks as depressing as usual. Up one end, a chalk mark on the cobblestones shows you where the victim was found. $/ if (gd.ld.boy){/$A $[link boy]$small boy$[end]$ looks at you askance from a doorway.
 
 $[div boy]$"I saw nothing", he says. 
 $<ul><li>$$[link]$Ignore him.$[act]$ $[end]$
-$<li>$$[link]$Stare at him$[act]$"Threekins wasn't even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.$[end]$
-$[end]$
+$<li>$$[link]$Stare at him$[act]$"Threekins wasn't even there when the dog attacked him", he says with a frightened expression. "I know nothing." He runs away down a narrow passage between two buildings.$/gd.ld.boy=false; gd.ld.dog=true;/$$[end]$
+$[end]$$/}/$
 $<ul><li>$$[link]$Wander down one of the passageways$[act]$As you get further into the passageway, it gets darker and darker. But you do not find anything of interest.$[end]$
+$<li>$$[link]$Try to find someone who will talk. $[act]$You have problems finding anyone to question. The City Guard is not popular here. You eventually find an old drunk sleeping in a corner. You kick him awake. "Gimme drink", he says. $[link]$Give him a swig from your bottle. $[act]$You ask him has he seen anything$/if (gd.ld.dog){/$, like a dog."That was no ordinary dog", he says, looking even more afraid. "That was a witch's familiar", he says, and $/gd.knowWitch=true;}else{/$. He$/}/$starts to shake violently. You cannot get any more out of him.$[end]$$[end]$
 $[include CityOptions]$
 $</ul>$ 
 $[include Inventory]$
@@ -52,7 +53,7 @@ $[include Inventory]$
 $[page Maktor]$$<p>$The ring merchant leads you to an upper room in a nearby building. Maktor is a tall, lean man with long fingers. He is dressed entirely in black. She shows Maktor the ring. He examines it carefully.
 $<p>$"That is a ring from the $<i>$tradhe$</i>$", he says. "You might call them fairies, but that is the name by which the call themselves. If you want to know more of it, you will need to visit the $<i>$tradhe$</i>$ in the forest."
 $<p>$He adds, "Now I have been a good citizen and helped you, but one day, perhaps, I will need your help, so remember me."
-$/gd.oweMaktor=true;/$
+$/gd.oweMaktor=true; gd.knowFairy=true;/$
 $<ul>$
 $[include CityOptions]$
 $</ul>$
@@ -68,3 +69,4 @@ $/if (gd.haveRing&&currentPage!='RingMerchant'){/$$<li>$$[link]$Visit a ring mer
 $/if (currentPage!='CrimeScene'){/$$<li>$$[link]$Proceed to the scene of the crime$[goto CrimeScene]$$/}/$
 $/if (currentPage!='OfficerGrommitt'){/$$<li>$$[link]$Visit Officer Grommitt$[goto OfficerGrommitt]$$/}/$
 $/if (currentPage!='Maktor'&&gd.maktor){/$$<li>$$[link]$Visit Maktor$[goto Maktor]$$/}/$
+$/if (gd.knowWitch){/$$<li>$$[link]$Find someone who knows about witches$[act]$ $[end]$ $/}/$

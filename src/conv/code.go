@@ -9,9 +9,12 @@ import (
 	"strings"
 )
 
+/* outData contains all the data required for generating pages */
 type outData struct {
 	Pages []*outPage
 }
+
+/* outPage contains the data for generating a single page */
 type outPage struct {
 	Name      string
 	InitLines []string
@@ -19,6 +22,7 @@ type outPage struct {
 	FixLines  []string
 }
 
+/* makeGenData builds theOutData with page data */
 func makeGenData() {
 	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
 	for _, page := range thePageSet {
@@ -27,11 +31,13 @@ func makeGenData() {
 		theOutData.Pages = append(theOutData.Pages, outPage)
 	}
 }
-func makeOutPage(theName string) (theOutPage *outPage) {
+
+/* makeOutPage creates and initialises a new outPage*/ func makeOutPage(theName string) (theOutPage *outPage) {
 	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]string, 0, 0)}
 	return
 }
-func (theOutPage *outPage) codePage(thePage *page) {
+
+/* */ func (theOutPage *outPage) codePage(thePage *page) {
 	for _, theFragment := range thePage.theFragments {
 		theOutFragment := theFragment.code()
 		theOutPage.InitLines = append(theOutPage.InitLines, theOutFragment.InitLines.lines()...)
@@ -40,13 +46,15 @@ func (theOutPage *outPage) codePage(thePage *page) {
 	}
 }
 
-var autoLink int
-var allSpace *regexp.Regexp
+/* */ var autoLink int
 
-func init()                    { allSpace = regexp.MustCompile(`^[\s]*$`) }
-func isAllSpace(s string) bool { return allSpace.MatchString(s) }
+/* */ var allSpace *regexp.Regexp
 
-func escapeAll(inString string) string {
+/* */ func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
+
+/* */ func isAllSpace(s string) bool { return allSpace.MatchString(s) }
+
+/* */ func escapeAll(inString string) string {
 	outSegs := make([]string, 0, 0)
 	for _, rune := range inString {
 		outSegs = append(outSegs, fmt.Sprintf("&#%d;", rune))
@@ -54,7 +62,7 @@ func escapeAll(inString string) string {
 	return strings.Join(outSegs, "")
 }
 
-func (theFragment *fragment) code() (theOutFragment *outFragment) {
+/* */ func (theFragment *fragment) code() (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	comprText := compress(theFragment.text)
@@ -102,7 +110,8 @@ func (theFragment *fragment) code() (theOutFragment *outFragment) {
 	}
 	return
 }
-func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
+
+/* */ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.SetLines.addStrClose("parts.push(\"", "<a id='"+id+"'>", "\");")
@@ -112,7 +121,8 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	theOutFragment.SetLines.addStrClose("parts.push(\"", "</a>", "\");")
 	return
 }
-func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
+
+/* */ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.InitLines.addStr("df." + id + "=false;")
@@ -122,7 +132,8 @@ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFrag
 	theOutFragment.SetLines.addStrClose("parts.push(\"", "</a>", "\");")
 	return
 }
-func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
+
+/* */ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.SetLines.addStr("if (df." + id + ") {parts.push(\"<" + tag + ">\");")
@@ -134,51 +145,55 @@ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *
 	return
 }
 
-type outFragment struct {
+/* */ type outFragment struct {
 	InitLines outLineSet
 	SetLines  outLineSet
 	FixLines  outLineSet
 }
 
-func (theOutFragment *outFragment) init() {
+/* */ func (theOutFragment *outFragment) init() {
 	theOutFragment.InitLines.init()
 	theOutFragment.SetLines.init()
 	theOutFragment.FixLines.init()
 }
 
-func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
+/* */ func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
 	for _, theSubFragment := range subFragments {
 		theOutSubfragment := theSubFragment.code()
 		theOutFragment.includeOutSubfragment(theOutSubfragment)
 	}
 }
-func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
+
+/* */ func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
 	theOutFragment.InitLines.includeSubLineSet(&theOutSubfragment.InitLines)
 	theOutFragment.SetLines.includeSubLineSet(&theOutSubfragment.SetLines)
 	theOutFragment.FixLines.includeSubLineSet(&theOutSubfragment.FixLines)
 }
 
-type outLineSet struct {
+/* */ type outLineSet struct {
 	theStrings []string
 	theCloser  string
 }
 
-func (theOutLineSet *outLineSet) init() {
+/* */ func (theOutLineSet *outLineSet) init() {
 	theOutLineSet.theStrings = make([]string, 0, 0)
 	theOutLineSet.theCloser = ""
 }
-func (theOutLineSet *outLineSet) addStr(theString string) {
+
+/* */ func (theOutLineSet *outLineSet) addStr(theString string) {
 	theOutLineSet.close()
 	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theString)
 }
-func (theOutLineSet *outLineSet) close() {
+
+/* */ func (theOutLineSet *outLineSet) close() {
 	if theOutLineSet.theCloser == "" {
 		return
 	}
 	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theOutLineSet.theCloser)
 	theOutLineSet.theCloser = ""
 }
-func (theOutLineSet *outLineSet) addStrClose(theStarter, theString, theCloser string) {
+
+/* */ func (theOutLineSet *outLineSet) addStrClose(theStarter, theString, theCloser string) {
 	if logging {
 		log.Printf("asc '%s'/'%s'=%t ", theCloser, theOutLineSet.theCloser, theOutLineSet.theCloser == theCloser)
 	}
@@ -191,15 +206,16 @@ func (theOutLineSet *outLineSet) addStrClose(theStarter, theString, theCloser st
 	theOutLineSet.theCloser = theCloser
 }
 
-func (theOutLineSet *outLineSet) lines() []string {
+/* */ func (theOutLineSet *outLineSet) lines() []string {
 	theOutLineSet.close()
 	return theOutLineSet.theStrings
 }
-func (theOutLineSet *outLineSet) includeSubLineSet(theSubOutLineSet *outLineSet) {
+
+/* */ func (theOutLineSet *outLineSet) includeSubLineSet(theSubOutLineSet *outLineSet) {
 	theSubOutLineSet.close()
 	theOutLineSet.close()
 	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theSubOutLineSet.theStrings...)
 }
 
-//type fragCode struct {
+///* */ type fragCode struct {
 //}

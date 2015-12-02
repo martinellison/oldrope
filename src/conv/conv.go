@@ -8,9 +8,9 @@ import (
 	"os"
 )
 
-var logging, hashText bool
+/* */ var logging, hashText bool
 
-func main() {
+/* */ func main() {
 	var inFileName, outFileName, baseDir, jsFileName, logFileName string
 	var help bool
 	flag.StringVar(&baseDir, "dir", ".", "directory for files")
@@ -74,7 +74,8 @@ func main() {
 		log.Print("file generated.")
 	}
 }
-func ifThenElse(p bool, st string, sf string) string {
+
+/* */ func ifThenElse(p bool, st string, sf string) string {
 	if p {
 		return st
 	}
@@ -82,7 +83,7 @@ func ifThenElse(p bool, st string, sf string) string {
 }
 
 // initlog creates a log file for debugging.
-func initLog(filePrefix, logFileName string) {
+/* */ func initLog(filePrefix, logFileName string) {
 	if logFileName == "" {
 		logging = false
 		return
@@ -95,6 +96,7 @@ func initLog(filePrefix, logFileName string) {
 	log.SetOutput(f)
 	logging = true
 }
-func reportError(msg string, lineNumber int) {
+
+/* */ func reportError(msg string, lineNumber int) {
 	os.Stderr.WriteString(fmt.Sprintf("(%d): %s\n", lineNumber, msg))
 }

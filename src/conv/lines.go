@@ -8,16 +8,17 @@ import (
 	"os"
 )
 
-type scanLine struct {
+/* */ type scanLine struct {
 	text   string
 	number int
 	eof    bool
 }
 
-var lineChan chan scanLine
-var linesDone chan int
+/* */ var lineChan chan scanLine
 
-func getLines(path string) {
+/* */ var linesDone chan int
+
+/* */ func getLines(path string) {
 	lineNumber := 0
 	file, err := os.Open(path)
 	if err != nil {

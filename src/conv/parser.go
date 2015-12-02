@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-//func dumpTokens() {
+///* */ func dumpTokens() {
 //	if logging {
 //		log.Print("dumping tokens...")
 //	}
@@ -29,11 +29,11 @@ import (
 //	linesDone <- 1
 //}
 
-var theParser struct {
+/* */ var theParser struct {
 	theCurrentToken token
 }
 
-func parse() {
+/* */ func parse() {
 	getToken()
 	for tokTyp() != eofTokenType {
 		if tokTyp() == identTokenType {
@@ -52,7 +52,8 @@ func parse() {
 		}
 	}
 }
-func parsePage() {
+
+/* */ func parsePage() {
 	expectIdent("page")
 	pageName := tokText()
 	if logging {
@@ -70,7 +71,8 @@ func parsePage() {
 		}
 	}
 }
-func parseBody(stopIdents []string) (theFragments []*fragment) {
+
+/* */ func parseBody(stopIdents []string) (theFragments []*fragment) {
 	if logging {
 		log.Printf("parsing body")
 	}
@@ -163,7 +165,8 @@ func parseBody(stopIdents []string) (theFragments []*fragment) {
 	}
 	return
 }
-func stopped(stopIdents []string) bool {
+
+/* */ func stopped(stopIdents []string) bool {
 	if tokTyp() == eofTokenType {
 		return true
 	}
@@ -178,7 +181,7 @@ func stopped(stopIdents []string) bool {
 	return false
 }
 
-func getToken() {
+/* */ func getToken() {
 	theParser.theCurrentToken = <-tokenChan
 	if logging {
 		log.Printf("parsing token: '%s'", theParser.theCurrentToken.text)
@@ -187,15 +190,19 @@ func getToken() {
 		log.Printf("end of input")
 	}
 }
-func tokTyp() tokenType { return theParser.theCurrentToken.theType }
-func tokText() string   { return theParser.theCurrentToken.text }
-func tokIsIdent(id string) bool {
+
+/* */ func tokTyp() tokenType { return theParser.theCurrentToken.theType }
+
+/* */ func tokText() string { return theParser.theCurrentToken.text }
+
+/* */ func tokIsIdent(id string) bool {
 	if tokTyp() != identTokenType {
 		return false
 	}
 	return theParser.theCurrentToken.text == id
 }
-func expectIdent(id string) {
+
+/* */ func expectIdent(id string) {
 	if tokIsIdent(id) {
 		getToken()
 	} else {
@@ -203,14 +210,16 @@ func expectIdent(id string) {
 	}
 }
 
-type pageSet map[string]page
-type page struct {
+/* */ type pageSet map[string]page
+
+/* */ type page struct {
 	local              []string
 	theFragments       []*fragment
 	theFragmentsByName map[string]*fragment
 	theName            string
 }
-type fragType int
+
+/* */ type fragType int
 
 const (
 	spanFragType fragType = iota
@@ -224,7 +233,7 @@ const (
 	includeFragType
 )
 
-func (theFragType fragType) String() string {
+/* */ func (theFragType fragType) String() string {
 	switch theFragType {
 	case spanFragType:
 		return "span"
@@ -249,7 +258,7 @@ func (theFragType fragType) String() string {
 	}
 }
 
-type fragment struct {
+/* */ type fragment struct {
 	theFragType     fragType
 	name            string
 	text            string
@@ -258,15 +267,16 @@ type fragment struct {
 	auxName         string
 }
 
-var thePageSet pageSet
+/* */ var thePageSet pageSet
 
-var startPageName string
+/* */ var startPageName string
 
-func init() {
+/* */ func init() {
 	thePageSet = make(map[string]page, 0)
 	startPageName = "start"
 }
-func dumpPages() {
+
+/* */ func dumpPages() {
 	if !logging {
 		return
 	}
@@ -278,7 +288,8 @@ func dumpPages() {
 		}
 	}
 }
-func dumpFragment(fr *fragment, indent string) {
+
+/* */ func dumpFragment(fr *fragment, indent string) {
 	log.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType, fr.text)
 	if fr.auxName != "" {
 		log.Printf("%sgoto:%s\n", indent, fr.auxName)
