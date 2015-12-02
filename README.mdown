@@ -100,9 +100,17 @@ This will do different things depending on the value of `gd.drunkPotion` (i.e. p
 
 ##Installation
 
+###Downloads
+
+There is a Linux 64-bit binary available.
+
+There is also a Windows 64-bit binary available, but it has not been tested on Windows (and it does not work on Wine).
+
 ###Building from source
 
 The source can be checked out from github or downloaded.
+
+The only dependency is the Go (Golang http://golang.org) build system. All the imported packages are in the standard distribution.
 
 The program can be built from source using the `build.sh` script included with the source distribution.
 

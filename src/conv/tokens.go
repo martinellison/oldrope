@@ -1,7 +1,11 @@
 // tokens.go
 package main
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"os"
+)
 
 /* token describes a token from the input */
 type token struct {
@@ -37,6 +41,13 @@ const (
 )
 
 /* */ func getTokens() {
+	defer func() {
+		rec := recover()
+		if rec == nil {
+			return
+		}
+		os.Stderr.WriteString(fmt.Sprintf("getTokens: internal error: %v", rec))
+	}()
 	setTokenState(textState)
 	for {
 		scanState.line = <-lineChan

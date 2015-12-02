@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 )
 
 ///* */ func dumpTokens() {
@@ -34,6 +35,13 @@ import (
 }
 
 /* */ func parse() {
+	defer func() {
+		rec := recover()
+		if rec == nil {
+			return
+		}
+		os.Stderr.WriteString(fmt.Sprintf("parse: internal error: %v", rec))
+	}()
 	getToken()
 	for tokTyp() != eofTokenType {
 		if tokTyp() == identTokenType {

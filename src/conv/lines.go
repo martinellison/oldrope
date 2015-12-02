@@ -19,6 +19,13 @@ import (
 /* */ var linesDone chan int
 
 /* */ func getLines(path string) {
+	defer func() {
+		rec := recover()
+		if rec == nil {
+			return
+		}
+		os.Stderr.WriteString(fmt.Sprintf("getLines: internal error: %v", rec))
+	}()
 	lineNumber := 0
 	file, err := os.Open(path)
 	if err != nil {
