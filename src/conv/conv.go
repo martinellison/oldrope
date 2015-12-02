@@ -11,6 +11,13 @@ import (
 /* */ var logging, hashText bool
 
 /* */ func main() {
+	defer func() {
+		rec := recover()
+		if rec == nil {
+			return
+		}
+		os.Stderr.WriteString(fmt.Sprintf("internal error: %v", rec))
+	}()
 	var inFileName, outFileName, baseDir, jsFileName, logFileName string
 	var help bool
 	flag.StringVar(&baseDir, "dir", ".", "directory for files")

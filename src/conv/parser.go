@@ -290,7 +290,7 @@ const (
 }
 
 /* */ func dumpFragment(fr *fragment, indent string) {
-	log.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType, fr.text)
+	log.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType.String(), fr.text)
 	if fr.auxName != "" {
 		log.Printf("%sgoto:%s\n", indent, fr.auxName)
 	}
