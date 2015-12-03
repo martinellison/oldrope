@@ -8,17 +8,21 @@ import (
 	"os"
 )
 
-/* */ type scanLine struct {
+/* a scanLine is a line as read in ready for tokenising*/
+type scanLine struct {
 	text   string
 	number int
 	eof    bool
 }
 
-/* */ var lineChan chan scanLine
+/* lineChan is the current scanLine*/
+var lineChan chan scanLine
 
-/* */ var linesDone chan int
+/* linesDone is a channel that receives the scanLines*/
+var linesDone chan int
 
-/* */ func getLines(path string) {
+/* getLines reads the input from a file and coverts it to scanLines */
+func getLines(path string) {
 	defer func() {
 		rec := recover()
 		if rec == nil {

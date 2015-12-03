@@ -4,7 +4,6 @@ package main
 import (
 	"fmt"
 	"html"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -17,9 +16,20 @@ type outData struct {
 /* outPage contains the data for generating a single page */
 type outPage struct {
 	Name      string
-	InitLines []string
-	SetLines  []string
-	FixLines  []string
+	InitLines string
+	SetLines  string
+	FixLines  string
+}
+type lineItem struct {
+	theText string
+	pushing bool
+}
+
+func (theLineItem lineItem) String() string {
+	if theLineItem.pushing {
+		return "*push* " + theLineItem.theText
+	}
+	return theLineItem.theText
 }
 
 /* makeGenData builds theOutData with page data */
@@ -32,29 +42,57 @@ func makeGenData() {
 	}
 }
 
-/* makeOutPage creates and initialises a new outPage*/ func makeOutPage(theName string) (theOutPage *outPage) {
-	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]string, 0, 0)}
+/* makeOutPage creates and initialises a new outPage*/
+func makeOutPage(theName string) (theOutPage *outPage) {
+	theOutPage = &outPage{Name: theName, SetLines: "", FixLines: ""}
 	return
 }
 
-/* */ func (theOutPage *outPage) codePage(thePage *page) {
+/* codePage creates the code for a page */
+func (theOutPage *outPage) codePage(thePage *page) {
+	theInitLines := make([]*lineItem, 0, 0)
+	theSetLines := make([]*lineItem, 0, 0)
+	theFixLines := make([]*lineItem, 0, 0)
 	for _, theFragment := range thePage.theFragments {
 		theOutFragment := theFragment.code()
-		theOutPage.InitLines = append(theOutPage.InitLines, theOutFragment.InitLines.lines()...)
-		theOutPage.SetLines = append(theOutPage.SetLines, theOutFragment.SetLines.lines()...)
-		theOutPage.FixLines = append(theOutPage.FixLines, theOutFragment.FixLines.lines()...)
+		theInitLines = append(theInitLines, theOutFragment.InitLines...)
+		theSetLines = append(theSetLines, theOutFragment.SetLines...)
+		theFixLines = append(theFixLines, theOutFragment.FixLines...)
 	}
+	theOutPage.InitLines = collapse(theInitLines)
+	theOutPage.SetLines = collapse(theSetLines)
+	theOutPage.FixLines = collapse(theFixLines)
+}
+func collapse(theLineItems []*lineItem) string {
+	outParts := make([]string, 0, len(theLineItems))
+	pushing := false
+	for _, outPart := range theLineItems {
+		if !pushing && outPart.pushing {
+			outParts = append(outParts, "parts.push(\"")
+		} else if pushing && !outPart.pushing {
+			outParts = append(outParts, "\");")
+		}
+		outParts = append(outParts, outPart.theText)
+		pushing = outPart.pushing
+	}
+	if pushing {
+		outParts = append(outParts, "\");")
+	}
+	return strings.Join(outParts, "")
 }
 
-/* */ var autoLink int
+/* autoLink */ var autoLink int
 
-/* */ var allSpace *regexp.Regexp
+/* allSpace is a regular expression for a string of all white space */
+var allSpace *regexp.Regexp
 
-/* */ func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
+func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
 
-/* */ func isAllSpace(s string) bool { return allSpace.MatchString(s) }
+/* isAllSpace tests whether a string is all white space  */
+func isAllSpace(s string) bool { return allSpace.MatchString(s) }
 
-/* */ func escapeAll(inString string) string {
+/* escapeAll converts a string to HTML escape characters. All characters are converted, even a..z */
+func escapeAll(inString string) string {
 	outSegs := make([]string, 0, 0)
 	for _, rune := range inString {
 		outSegs = append(outSegs, fmt.Sprintf("&#%d;", rune))
@@ -62,7 +100,8 @@ func makeGenData() {
 	return strings.Join(outSegs, "")
 }
 
-/* */ func (theFragment *fragment) code() (theOutFragment *outFragment) {
+/* code converts a fragment to javascript code */
+func (theFragment *fragment) code() (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	comprText := compress(theFragment.text)
@@ -91,7 +130,7 @@ func makeGenData() {
 		theOutFragment.SetLines.addStr("parts.push(" + comprText + ");")
 	case textFragType:
 		if !isAllSpace(escapeText) {
-			theOutFragment.SetLines.addStrClose("parts.push(\"", escapeText, "\");")
+			theOutFragment.SetLines.addStrPush(escapeText)
 		}
 	case linkFragType:
 		if theFragment.auxName == "" {
@@ -101,7 +140,7 @@ func makeGenData() {
 			theOutFragment.includeOutSubfragment(outOffPageLink(fragName, theFragment.auxName, theFragment.theFragments))
 		}
 	case htmlFragType:
-		theOutFragment.SetLines.addStrClose("parts.push(\"", "<"+comprText+">", "\");")
+		theOutFragment.SetLines.addStrPush("<" + comprText + ">")
 	case includeFragType:
 		theOutFragment.InitLines.addStr("pages." + theFragment.auxName + ".init(parts);")
 		theOutFragment.SetLines.addStr("pages." + theFragment.auxName + ".display(parts);")
@@ -111,111 +150,77 @@ func makeGenData() {
 	return
 }
 
-/* */ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* outOffPageLink codes an out-of-page link */
+func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
-	theOutFragment.SetLines.addStrClose("parts.push(\"", "<a id='"+id+"'>", "\");")
+	theOutFragment.SetLines.addStrPush("<a id='" + id + "'>")
 	fixLine := "setClick('" + id + "', function(){setPage('" + targetPage + "');});"
 	theOutFragment.FixLines.addStr(fixLine)
 	theOutFragment.includeSubfragments(subFragments)
-	theOutFragment.SetLines.addStrClose("parts.push(\"", "</a>", "\");")
+	theOutFragment.SetLines.addStrPush("</a>")
 	return
 }
 
-/* */ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* outOnPageLink */ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.InitLines.addStr("df." + id + "=false;")
-	theOutFragment.SetLines.addStrClose("parts.push(\"", "<a id='"+id+"'>", "\");")
+	theOutFragment.SetLines.addStrPush("<a id='" + id + "'>")
 	theOutFragment.FixLines.addStr("setClick('" + id + "', function(){df." + id + "=true; displayPage();});")
 	theOutFragment.includeSubfragments(subFragments)
-	theOutFragment.SetLines.addStrClose("parts.push(\"", "</a>", "\");")
+	theOutFragment.SetLines.addStrPush("</a>")
 	return
 }
 
-/* */ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* outBlock */ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
-	theOutFragment.SetLines.addStr("if (df." + id + ") {parts.push(\"<" + tag + ">\");")
+	theOutFragment.SetLines.addStr("if (df." + id + ") {")
+	theOutFragment.SetLines.addStrPush("<" + tag + ">")
 	theOutFragment.FixLines.addStr("if (df." + id + ") {")
 	theOutFragment.includeSubfragments(subFragments)
-	theOutFragment.SetLines.addStrClose("parts.push(\"", "</"+tag+">", "\");")
+	theOutFragment.SetLines.addStrPush("</" + tag + ">")
 	theOutFragment.SetLines.addStr("}")
 	theOutFragment.FixLines.addStr("}")
 	return
 }
 
-/* */ type outFragment struct {
-	InitLines outLineSet
-	SetLines  outLineSet
-	FixLines  outLineSet
+/* outFragment */ type outFragment struct {
+	InitLines lineItemSet
+	SetLines  lineItemSet
+	FixLines  lineItemSet
 }
 
-/* */ func (theOutFragment *outFragment) init() {
-	theOutFragment.InitLines.init()
-	theOutFragment.SetLines.init()
-	theOutFragment.FixLines.init()
+/* init */ func (theOutFragment *outFragment) init() {
+	theOutFragment.InitLines = make([]*lineItem, 0, 0)
+	theOutFragment.SetLines = make([]*lineItem, 0, 0)
+	theOutFragment.FixLines = make([]*lineItem, 0, 0)
 }
 
-/* */ func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
+/* includeSubfragments */ func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
 	for _, theSubFragment := range subFragments {
 		theOutSubfragment := theSubFragment.code()
 		theOutFragment.includeOutSubfragment(theOutSubfragment)
 	}
 }
 
-/* */ func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
+/* includeOutSubfragment */ func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
 	theOutFragment.InitLines.includeSubLineSet(&theOutSubfragment.InitLines)
 	theOutFragment.SetLines.includeSubLineSet(&theOutSubfragment.SetLines)
 	theOutFragment.FixLines.includeSubLineSet(&theOutSubfragment.FixLines)
 }
 
-/* */ type outLineSet struct {
-	theStrings []string
-	theCloser  string
+/* lineItemSet */ type lineItemSet []*lineItem
+
+/* addStr */ func (theOutLineSet *lineItemSet) addStr(theString string) {
+	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString})
 }
 
-/* */ func (theOutLineSet *outLineSet) init() {
-	theOutLineSet.theStrings = make([]string, 0, 0)
-	theOutLineSet.theCloser = ""
+/* addStrPush */ func (theOutLineSet *lineItemSet) addStrPush(theString string) {
+	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString, pushing: true})
 }
 
-/* */ func (theOutLineSet *outLineSet) addStr(theString string) {
-	theOutLineSet.close()
-	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theString)
+/* includeSubLineSet*/ func (theOutLineSet *lineItemSet) includeSubLineSet(theSubOutLineSet *lineItemSet) {
+	*theOutLineSet = append(*theOutLineSet, *theSubOutLineSet...)
 }
-
-/* */ func (theOutLineSet *outLineSet) close() {
-	if theOutLineSet.theCloser == "" {
-		return
-	}
-	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theOutLineSet.theCloser)
-	theOutLineSet.theCloser = ""
-}
-
-/* */ func (theOutLineSet *outLineSet) addStrClose(theStarter, theString, theCloser string) {
-	if logging {
-		log.Printf("asc '%s'/'%s'=%t ", theCloser, theOutLineSet.theCloser, theOutLineSet.theCloser == theCloser)
-	}
-	if theOutLineSet.theCloser == theCloser {
-		theOutLineSet.theStrings = append(theOutLineSet.theStrings, theString)
-		return
-	}
-	theOutLineSet.close()
-	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theStarter, theString)
-	theOutLineSet.theCloser = theCloser
-}
-
-/* */ func (theOutLineSet *outLineSet) lines() []string {
-	theOutLineSet.close()
-	return theOutLineSet.theStrings
-}
-
-/* */ func (theOutLineSet *outLineSet) includeSubLineSet(theSubOutLineSet *outLineSet) {
-	theSubOutLineSet.close()
-	theOutLineSet.close()
-	theOutLineSet.theStrings = append(theOutLineSet.theStrings, theSubOutLineSet.theStrings...)
-}
-
-///* */ type fragCode struct {
-//}

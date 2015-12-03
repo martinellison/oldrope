@@ -168,9 +168,7 @@ import (
 		}
 		theFragments = append(theFragments, theFragment)
 	}
-	if logging {
-		log.Print("body done")
-	}
+	logIfLogging("body done")
 	return
 }
 

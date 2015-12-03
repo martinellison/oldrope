@@ -35,7 +35,7 @@ import (
 	}
 	filePrefix := fmt.Sprintf("%s%c", baseDir, os.PathSeparator)
 	initLog(filePrefix, logFileName)
-	lineChan = make(chan scanLine, 1)
+	lineChan = make(chan scanLine)
 	go getLines(filePrefix + inFileName)
 	linesDone = make(chan int)
 	go getTokens()
@@ -77,9 +77,7 @@ import (
 		file.WriteString("</script>")
 	}
 	genEnd(file)
-	if logging {
-		log.Print("file generated.")
-	}
+	logIfLogging("file generated.")
 }
 
 /* */ func ifThenElse(p bool, st string, sf string) string {
@@ -102,6 +100,11 @@ import (
 	}
 	log.SetOutput(f)
 	logging = true
+}
+func logIfLogging(msg string) {
+	if logging {
+		log.Print(msg)
+	}
 }
 
 /* */ func reportError(msg string, lineNumber int) {

@@ -52,7 +52,7 @@ const (
 	for {
 		scanState.line = <-lineChan
 		if logging {
-			log.Printf("%d inline: %s (%d)", scanState.line.number, scanState.line.text, len(scanState.line.text))
+			log.Printf("%d inline: '%s' (%d) eof: %t", scanState.line.number, scanState.line.text, len(scanState.line.text), scanState.line.eof)
 		}
 		scanState.lineLen = len(scanState.line.text)
 		scanState.charPos = 0
@@ -128,21 +128,19 @@ const (
 			default:
 				reportError("internal error, unknown scan state", scanState.line.number)
 				log.Fatalf("unknown scan state: %d", scanState.state)
+				scanState.charPos++
 			}
 		}
+		logIfLogging("end of input line")
 		if scanState.line.eof {
-			if logging {
-				log.Print("in lines at eof, emitting eof token")
-			}
+			logIfLogging("in lines at eof, emitting eof token")
 			break
 		}
 	}
 	switch scanState.state {
 	case textState:
 		emitToken(textTokenType)
-		if logging {
-			log.Print("in text at end")
-		}
+		logIfLogging("in text at end")
 	case commentState:
 		reportError("in comment at end", scanState.line.number)
 	case jsCodeState:
@@ -157,11 +155,10 @@ const (
 		emitToken(htmlTokenType)
 		reportError("in html at end", scanState.line.number)
 	}
+	logIfLogging("emitting end of file token")
 	emitToken(eofTokenType)
 	linesDone <- 1
-	if logging {
-		log.Print("all lines read")
-	}
+	logIfLogging("all lines read")
 }
 
 /* */ func getConvToken() {
@@ -250,6 +247,9 @@ const (
 
 /* */ func emitToken(theTokenType tokenType) {
 	tokenText := string(scanState.tokenText)
+	if tokenText == "" && theTokenType != eofTokenType {
+		return
+	}
 	if logging {
 		log.Printf("emitting token: %s", tokenText)
 	}

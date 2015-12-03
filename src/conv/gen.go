@@ -10,26 +10,22 @@ import (
 	"time"
 )
 
-/* */ var templ *template.Template
+/* templ is the code output template */
+var templ *template.Template
 
-/* */ func makeTemplate() {
+/* makeTemplate initialises the template */
+func makeTemplate() {
 	var err error
 	templateText := compress(`pages = {
 	{{range .Pages}} {{.Name}}: {
 	 	init: function() {
-			{{range .InitLines}}
-			{{.}}
-			{{end}}
+			{{.InitLines}}
 		},
 		display: function(parts) {
-			{{range .SetLines}}
-			{{.}}
-			{{end}}
+			{{.SetLines}}
         	},
 		fix: function(parts) {
-			{{range .FixLines}}
-			{{.}}
-			{{end}}
+			{{.FixLines}}
         	},
 	},
 	{{end}}
@@ -40,24 +36,27 @@ import (
 	}
 }
 
-/* */ var whiteSpaceRegex *regexp.Regexp
+/* whiteSpaceRegex is a regular expression for detecting white space */
+var whiteSpaceRegex *regexp.Regexp
 
-/* */ func init() {
+func init() {
 	whiteSpaceRegex = regexp.MustCompile(`[\s]+`)
 }
 
-/* */ func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
+/* compress compresses a string by converting sequences of whitespace to a single space */
+func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
 
 /* */ var theOutData outData
 
-/* */ func expandTemplate(w io.Writer) {
+/* expandTemplate expands the output data into the template */
+func expandTemplate(w io.Writer) {
 	err := templ.Execute(w, theOutData)
 	if err != nil {
 		log.Fatalf("template exp error: %v", err)
 	}
 }
 
-/* */ func genStart(w io.Writer) {
+/* genStart generates the fixed part of the output file */ func genStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`<!DOCTYPE html>
 <html>
@@ -78,18 +77,20 @@ html, body {color: black; font-family: Georgia, serif;}
 `)))
 }
 
-/* */ func genHeader(w io.Writer) {
+/* genHeader generates the fixed part of the output file */
+func genHeader(w io.Writer) {
 	w.Write([]byte(fmt.Sprintf("/* created by program on %s */", time.Now())))
 }
 
-/* */ func genJsStart(w io.Writer) {
+/* genJsStart generates the fixed part of the output file */
+func genJsStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`var gd = {};
-/* */ var ld = {};
-/* */ var currentPage = 'start';
-/* */ var cp;
-/* */ var pages;
-/* */ var displayPage = function() { var parts = [];
+  var ld = {};
+  var currentPage = 'start';
+  var cp;
+  var pages;
+  var displayPage = function() { var parts = [];
     cp = pages[currentPage];
     if (!cp) console.error('unknown page: ' + currentPage);
     cp.display(parts);
@@ -97,26 +98,28 @@ html, body {color: black; font-family: Georgia, serif;}
     cp.fix();
     console.log('displayed ' + currentPage);
 };
-/* */ var setPage = function(pageName) {
+  var setPage = function(pageName) {
     console.log('displaying page: ' + pageName);
     currentPage = pageName;
     ld = {};
 	df = {};
 	displayPage();
 };
-/* */ var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
-/* */ var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)console.log('no '+id);else elt.onclick=fn;};
+  var setHtml=function(id,text){var elt=document.getElementById(id); if(!elt)alert('no '+id);elt.innerHTML = text;};
+ var setClick=function(id,fn){var elt=document.getElementById(id); if(!elt)console.log('no '+id);else elt.onclick=fn;};
 `)))
 }
 
-/* */ func genJsEnd(w io.Writer) {
+/* genJsEnd generates the fixed part of the output fil*/
+func genJsEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');
 displayPage();
 console.log('script loaded');
 `)))
 }
 
-/* */ func genEnd(w io.Writer) {
+/* genEnd generates the fixed part of the output file */
+func genEnd(w io.Writer) {
 	w.Write([]byte(compress(`</body>
 </html>`)))
 }

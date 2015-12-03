@@ -1,3 +1,4 @@
+reset
 export BASE=$(git rev-parse --show-toplevel)
 cd $BASE
 export GOPATH=$BASE 
