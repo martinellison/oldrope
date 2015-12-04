@@ -61,3 +61,33 @@ func TestCodeOutOffPageLink1(t *testing.T) {
 	assert.Equal(1, len(theOutFragment.FixLines))
 	assert.Equal("setClick('fred', function(){setPage('bill');});", collapse(theOutFragment.FixLines))
 }
+func TestCodeOutOnPageLink1(t *testing.T) {
+	assert := assert.New(t)
+	theOutFragment := outOnPageLink("fred", make([]*fragment, 0, 0))
+	assert.Equal(1, len(theOutFragment.InitLines))
+	assert.Equal("df.fred=false;", collapse(theOutFragment.InitLines))
+	assert.Equal(2, len(theOutFragment.SetLines))
+	assert.Equal("parts.push(\"<a id='fred'></a>\");", collapse(theOutFragment.SetLines))
+	assert.Equal(1, len(theOutFragment.FixLines))
+	assert.Equal("setClick('fred', function(){df.fred=true; displayPage();});", collapse(theOutFragment.FixLines))
+}
+func TestCodeOutBlock1(t *testing.T) {
+	assert := assert.New(t)
+	theOutFragment := outBlock("fred", "span", make([]*fragment, 0, 0))
+	assert.Equal(0, len(theOutFragment.InitLines))
+	assert.Equal("", collapse(theOutFragment.InitLines))
+	assert.Equal(4, len(theOutFragment.SetLines))
+	assert.Equal("if (df.fred) {parts.push(\"<span></span>\");}", collapse(theOutFragment.SetLines))
+	assert.Equal(2, len(theOutFragment.FixLines))
+	assert.Equal("if (df.fred) {}", collapse(theOutFragment.FixLines))
+}
+
+func TestCodeCode1(t *testing.T) {
+	assert := assert.New(t)
+	theFragment := &fragment{theFragType: textFragType, name: "fred", text: "bill", theFragments: make([]*fragment, 0, 0), actionFragments: make([]*fragment, 0, 0), auxName: ""}
+	theOutFragment := theFragment.code()
+	assert.Equal(0, len(theOutFragment.InitLines))
+	assert.Equal(1, len(theOutFragment.SetLines))
+	assert.Equal("parts.push(\"bill\");", collapse(theOutFragment.SetLines))
+	assert.Equal(0, len(theOutFragment.FixLines))
+}

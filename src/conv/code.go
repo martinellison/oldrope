@@ -33,7 +33,7 @@ type outPage struct {
 
 /* makeOutPage creates and initialises a new outPage*/
 func makeOutPage(theName string) (theOutPage *outPage) {
-	theOutPage = &outPage{Name: theName, SetLines: "", FixLines: ""}
+	theOutPage = &outPage{Name: theName, InitLines: "", SetLines: "", FixLines: ""}
 	return
 }
 
