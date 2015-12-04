@@ -13,25 +13,6 @@ type outData struct {
 	Pages []*outPage
 }
 
-/* outPage contains the data for generating a single page */
-type outPage struct {
-	Name      string
-	InitLines string
-	SetLines  string
-	FixLines  string
-}
-type lineItem struct {
-	theText string
-	pushing bool
-}
-
-func (theLineItem lineItem) String() string {
-	if theLineItem.pushing {
-		return "*push* " + theLineItem.theText
-	}
-	return theLineItem.theText
-}
-
 /* makeGenData builds theOutData with page data */
 func makeGenData() {
 	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
@@ -40,6 +21,14 @@ func makeGenData() {
 		outPage.codePage(&page)
 		theOutData.Pages = append(theOutData.Pages, outPage)
 	}
+}
+
+/* outPage contains the data for generating a single page */
+type outPage struct {
+	Name      string
+	InitLines string
+	SetLines  string
+	FixLines  string
 }
 
 /* makeOutPage creates and initialises a new outPage*/
@@ -62,23 +51,6 @@ func (theOutPage *outPage) codePage(thePage *page) {
 	theOutPage.InitLines = collapse(theInitLines)
 	theOutPage.SetLines = collapse(theSetLines)
 	theOutPage.FixLines = collapse(theFixLines)
-}
-func collapse(theLineItems []*lineItem) string {
-	outParts := make([]string, 0, len(theLineItems))
-	pushing := false
-	for _, outPart := range theLineItems {
-		if !pushing && outPart.pushing {
-			outParts = append(outParts, "parts.push(\"")
-		} else if pushing && !outPart.pushing {
-			outParts = append(outParts, "\");")
-		}
-		outParts = append(outParts, outPart.theText)
-		pushing = outPart.pushing
-	}
-	if pushing {
-		outParts = append(outParts, "\");")
-	}
-	return strings.Join(outParts, "")
 }
 
 /* autoLink */ var autoLink int
@@ -162,7 +134,8 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	return
 }
 
-/* outOnPageLink */ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* outOnPageLink codes an on-page link */
+func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.InitLines.addStr("df." + id + "=false;")
@@ -173,7 +146,8 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	return
 }
 
-/* outBlock */ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* outBlock codes  a span or div */
+func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.SetLines.addStr("if (df." + id + ") {")
@@ -186,7 +160,7 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	return
 }
 
-/* outFragment */ type outFragment struct {
+/* outFragment represents a fragment of code */ type outFragment struct {
 	InitLines lineItemSet
 	SetLines  lineItemSet
 	FixLines  lineItemSet
@@ -198,29 +172,67 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	theOutFragment.FixLines = make([]*lineItem, 0, 0)
 }
 
-/* includeSubfragments */ func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
+/* includeSubfragments copies the line items from sub-fragments into a fragment */
+func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
 	for _, theSubFragment := range subFragments {
 		theOutSubfragment := theSubFragment.code()
 		theOutFragment.includeOutSubfragment(theOutSubfragment)
 	}
 }
 
-/* includeOutSubfragment */ func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
+/* includeOutSubfragment copies the line items from a sub-fragment into a fragment */
+func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
 	theOutFragment.InitLines.includeSubLineSet(&theOutSubfragment.InitLines)
 	theOutFragment.SetLines.includeSubLineSet(&theOutSubfragment.SetLines)
 	theOutFragment.FixLines.includeSubLineSet(&theOutSubfragment.FixLines)
 }
 
-/* lineItemSet */ type lineItemSet []*lineItem
+/* a lineItemSet is a sequence of lineItems*/
+type lineItemSet []*lineItem
 
-/* addStr */ func (theOutLineSet *lineItemSet) addStr(theString string) {
+/* addStr creates a line item without pushing */
+func (theOutLineSet *lineItemSet) addStr(theString string) {
 	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString})
 }
 
-/* addStrPush */ func (theOutLineSet *lineItemSet) addStrPush(theString string) {
+/* addStrPush creates a line item with pushing */
+func (theOutLineSet *lineItemSet) addStrPush(theString string) {
 	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString, pushing: true})
 }
 
-/* includeSubLineSet*/ func (theOutLineSet *lineItemSet) includeSubLineSet(theSubOutLineSet *lineItemSet) {
+/* includeSubLineSet appends a lineItemSet */
+func (theOutLineSet *lineItemSet) includeSubLineSet(theSubOutLineSet *lineItemSet) {
 	*theOutLineSet = append(*theOutLineSet, *theSubOutLineSet...)
+}
+
+/* collapse combines the line items into a string */
+func collapse(theLineItems []*lineItem) string {
+	outParts := make([]string, 0, len(theLineItems))
+	pushing := false
+	for _, outPart := range theLineItems {
+		if !pushing && outPart.pushing {
+			outParts = append(outParts, "parts.push(\"")
+		} else if pushing && !outPart.pushing {
+			outParts = append(outParts, "\");")
+		}
+		outParts = append(outParts, outPart.theText)
+		pushing = outPart.pushing
+	}
+	if pushing {
+		outParts = append(outParts, "\");")
+	}
+	return strings.Join(outParts, "")
+}
+
+/* a lineItem represents some text that will be output. If pushing is set, it needs to be quoted and pushed onto the parts array. */
+type lineItem struct {
+	theText string
+	pushing bool
+}
+
+func (theLineItem lineItem) String() string {
+	if theLineItem.pushing {
+		return "*push* " + theLineItem.theText
+	}
+	return theLineItem.theText
 }
