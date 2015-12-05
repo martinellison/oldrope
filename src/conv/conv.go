@@ -40,7 +40,7 @@ import (
 	linesDone = make(chan int)
 	go getTokens()
 	tokenChan = make(chan token)
-	go parse()
+	go theParser.parse()
 	<-linesDone
 	if logging {
 		log.Print("all lines scanned and parsed.")

@@ -170,3 +170,13 @@ func TestCodeCode9(t *testing.T) {
 	assert.Equal(1, len(theOutFragment.FixLines))
 	assert.Equal("pages.jane.fix();", collapse(theOutFragment.FixLines))
 }
+func TestCodeCode10(t *testing.T) {
+	assert := assert.New(t)
+	theFragment := &fragment{theFragType: linkFragType, name: "fred", text: "bill", theFragments: make([]*fragment, 0, 0), actionFragments: make([]*fragment, 0, 0), auxName: "jane"}
+	theOutFragment := theFragment.code()
+	assert.Equal(0, len(theOutFragment.InitLines))
+	assert.Equal(2, len(theOutFragment.SetLines))
+	assert.Equal("parts.push(\"<a id='fred'></a>\");", collapse(theOutFragment.SetLines))
+	assert.Equal(1, len(theOutFragment.FixLines))
+	assert.Equal("setClick('fred', function(){setPage('jane');});", collapse(theOutFragment.FixLines))
+}

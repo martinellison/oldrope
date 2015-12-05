@@ -30,11 +30,16 @@ import (
 //	linesDone <- 1
 //}
 
-/* */ var theParser struct {
+/* theParser is the parser */
+var theParser parser
+
+/* a parser contains the parse state  */
+type parser struct {
 	theCurrentToken token
 }
 
-/* */ func parse() {
+/* parse runs the parse (top-level parser) */
+func (theParser *parser) parse() {
 	defer func() {
 		rec := recover()
 		if rec == nil {
@@ -42,34 +47,35 @@ import (
 		}
 		os.Stderr.WriteString(fmt.Sprintf("parse: internal error: %v", rec))
 	}()
-	getToken()
-	for tokTyp() != eofTokenType {
-		if tokTyp() == identTokenType {
-			switch tokText() {
+	theParser.getToken()
+	for theParser.tokTyp() != eofTokenType {
+		if theParser.tokTyp() == identTokenType {
+			switch theParser.tokText() {
 			case "page":
-				parsePage()
+				theParser.parsePage()
 			default:
 				reportError(fmt.Sprintf("unknown identifier: %s", theParser.theCurrentToken.text), theParser.theCurrentToken.lineNumber)
-				getToken()
+				theParser.getToken()
 			}
 		} else {
-			if !isAllSpace(tokText()) {
-				reportError(fmt.Sprintf("not in directive: %s", tokText()), theParser.theCurrentToken.lineNumber)
+			if !isAllSpace(theParser.tokText()) {
+				reportError(fmt.Sprintf("not in directive: %s", theParser.tokText()), theParser.theCurrentToken.lineNumber)
 			}
-			getToken()
+			theParser.getToken()
 		}
 	}
 }
 
-/* */ func parsePage() {
-	expectIdent("page")
-	pageName := tokText()
+/* parsePage parses a page directive */
+func (theParser *parser) parsePage() {
+	theParser.expectIdent("page")
+	pageName := theParser.tokText()
 	if logging {
 		log.Printf("page name: '%s'", pageName)
 	}
-	getToken()
+	theParser.getToken()
 	thePage := page{local: make([]string, 0), theFragmentsByName: make(map[string]*fragment, 0), theName: pageName}
-	thePage.theFragments = parseBody([]string{"page"})
+	thePage.theFragments = theParser.parseBody([]string{"page"})
 	if thePage.theName != "" {
 		thePageSet[thePage.theName] = thePage
 	}
@@ -80,91 +86,92 @@ import (
 	}
 }
 
-/* */ func parseBody(stopIdents []string) (theFragments []*fragment) {
+/* parseBody */
+func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragment) {
 	if logging {
 		log.Printf("parsing body")
 	}
 	theFragments = make([]*fragment, 0)
-	for !stopped(stopIdents) {
+	for !theParser.stopped(stopIdents) {
 		theFragment := &fragment{theFragments: make([]*fragment, 0), name: "", text: "", auxName: "", actionFragments: make([]*fragment, 0)}
 		if logging {
-			log.Printf("getting fragment with token: %s", tokText())
+			log.Printf("getting fragment with token: %s", theParser.tokText())
 		}
-		switch tokTyp() {
+		switch theParser.tokTyp() {
 		case identTokenType:
-			switch tokText() {
+			switch theParser.tokText() {
 			case "link":
 				theFragment.theFragType = linkFragType
-				expectIdent("link")
-				if tokTyp() == identTokenType {
+				theParser.expectIdent("link")
+				if theParser.tokTyp() == identTokenType {
 					if logging {
-						log.Printf("link name: %s", tokText())
+						log.Printf("link name: %s", theParser.tokText())
 					}
-					theFragment.name = tokText()
-					getToken()
+					theFragment.name = theParser.tokText()
+					theParser.getToken()
 				}
-				theFragment.theFragments = parseBody([]string{"end", "page", "goto", "act"})
-				if tokIsIdent("goto") {
-					expectIdent("goto")
+				theFragment.theFragments = theParser.parseBody([]string{"end", "page", "goto", "act"})
+				if theParser.tokIsIdent("goto") {
+					theParser.expectIdent("goto")
 					if logging {
-						log.Printf("goto target: %s", tokText())
+						log.Printf("goto target: %s", theParser.tokText())
 					}
-					theFragment.auxName = tokText()
-					getToken()
-				} else if tokIsIdent("end") {
-					expectIdent("end")
-				} else if tokIsIdent("act") {
-					expectIdent("act")
-					theFragment.actionFragments = parseBody([]string{"end"})
-					expectIdent("end")
+					theFragment.auxName = theParser.tokText()
+					theParser.getToken()
+				} else if theParser.tokIsIdent("end") {
+					theParser.expectIdent("end")
+				} else if theParser.tokIsIdent("act") {
+					theParser.expectIdent("act")
+					theFragment.actionFragments = theParser.parseBody([]string{"end"})
+					theParser.expectIdent("end")
 				}
 			case "div", "span":
-				switch tokText() {
+				switch theParser.tokText() {
 				case "div":
 					theFragment.theFragType = divFragType
 				case "span":
 					theFragment.theFragType = spanFragType
 				}
-				getToken()
+				theParser.getToken()
 				if logging {
-					log.Printf("div/span name: %s", tokText())
+					log.Printf("div/span name: %s", theParser.tokText())
 				}
-				theFragment.name = tokText()
-				getToken() // div/span name
-				theFragment.actionFragments = parseBody([]string{"end"})
-				expectIdent("end")
+				theFragment.name = theParser.tokText()
+				theParser.getToken() // div/span name
+				theFragment.actionFragments = theParser.parseBody([]string{"end"})
+				theParser.expectIdent("end")
 			case "include":
-				expectIdent("include")
+				theParser.expectIdent("include")
 				if logging {
-					log.Printf("include target: %s", tokText())
+					log.Printf("include target: %s", theParser.tokText())
 				}
 				theFragment.theFragType = includeFragType
-				theFragment.auxName = tokText()
-				getToken() //target
+				theFragment.auxName = theParser.tokText()
+				theParser.getToken() //target
 			default:
-				reportError(fmt.Sprintf("unknown directive: %s", tokText()), theParser.theCurrentToken.lineNumber)
-				getToken()
-				getToken()
+				reportError(fmt.Sprintf("unknown directive: %s", theParser.tokText()), theParser.theCurrentToken.lineNumber)
+				theParser.getToken()
+				theParser.getToken()
 			}
 		case jsCodeTokenType:
 			theFragment.theFragType = jsCodeFragType
-			theFragment.text = tokText()
-			getToken()
+			theFragment.text = theParser.tokText()
+			theParser.getToken()
 		case jsExprTokenType:
 			theFragment.theFragType = jsExprFragType
-			theFragment.text = tokText()
-			getToken()
+			theFragment.text = theParser.tokText()
+			theParser.getToken()
 		case textTokenType:
 			theFragment.theFragType = textFragType
-			theFragment.text = tokText()
-			getToken()
+			theFragment.text = theParser.tokText()
+			theParser.getToken()
 		case htmlTokenType:
 			theFragment.theFragType = htmlFragType
-			theFragment.text = tokText()
-			getToken()
+			theFragment.text = theParser.tokText()
+			theParser.getToken()
 		default:
-			reportError(fmt.Sprintf("wrong kind of token: %s", tokText()), theParser.theCurrentToken.lineNumber)
-			getToken()
+			reportError(fmt.Sprintf("wrong kind of token: %s", theParser.tokText()), theParser.theCurrentToken.lineNumber)
+			theParser.getToken()
 		}
 		theFragments = append(theFragments, theFragment)
 	}
@@ -172,8 +179,8 @@ import (
 	return
 }
 
-/* */ func stopped(stopIdents []string) bool {
-	if tokTyp() == eofTokenType {
+/* stopped detects a stop token */ func (theParser *parser) stopped(stopIdents []string) bool {
+	if theParser.tokTyp() == eofTokenType {
 		return true
 	}
 	if theParser.theCurrentToken.theType != identTokenType {
@@ -187,30 +194,34 @@ import (
 	return false
 }
 
-/* */ func getToken() {
+/* getToken gets a new token */ func (theParser *parser) getToken() {
 	theParser.theCurrentToken = <-tokenChan
 	if logging {
 		log.Printf("parsing token: '%s'", theParser.theCurrentToken.text)
 	}
-	if tokTyp() == eofTokenType && logging {
+	if theParser.tokTyp() == eofTokenType && logging {
 		log.Printf("end of input")
 	}
 }
 
-/* */ func tokTyp() tokenType { return theParser.theCurrentToken.theType }
+/* tokTyp returns the type of the current togken */
+func (theParser *parser) tokTyp() tokenType { return theParser.theCurrentToken.theType }
 
-/* */ func tokText() string { return theParser.theCurrentToken.text }
+/* tokText returns the text of the current token */
+func (theParser *parser) tokText() string { return theParser.theCurrentToken.text }
 
-/* */ func tokIsIdent(id string) bool {
-	if tokTyp() != identTokenType {
+/* tokIsIdent returns whether the current token is the specified identifier */
+func (theParser *parser) tokIsIdent(id string) bool {
+	if theParser.tokTyp() != identTokenType {
 		return false
 	}
 	return theParser.theCurrentToken.text == id
 }
 
-/* */ func expectIdent(id string) {
-	if tokIsIdent(id) {
-		getToken()
+/* expectIdent consumes the current token if it is the expected token, and otherwise raises an error*/
+func (theParser *parser) expectIdent(id string) {
+	if theParser.tokIsIdent(id) {
+		theParser.getToken()
 	} else {
 		reportError(fmt.Sprintf("expected %s but not found", id), theParser.theCurrentToken.lineNumber)
 	}
