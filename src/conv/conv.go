@@ -106,6 +106,11 @@ func logIfLogging(msg string) {
 		log.Print(msg)
 	}
 }
+func logfIfLogging(msg string, params ...interface{}) {
+	if logging {
+		log.Printf(msg, params...)
+	}
+}
 
 /* */ func reportError(msg string, lineNumber int) {
 	os.Stderr.WriteString(fmt.Sprintf("(%d): %s\n", lineNumber, msg))

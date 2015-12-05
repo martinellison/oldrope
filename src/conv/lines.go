@@ -58,7 +58,5 @@ func getLines(path string) {
 		log.Printf("get lines err: %v", err)
 
 	}
-	if logging {
-		log.Printf("%d lines read", lineNumber)
-	}
+	logfIfLogging("%d lines read", lineNumber)
 }

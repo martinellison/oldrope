@@ -7,29 +7,6 @@ import (
 	"os"
 )
 
-///* */ func dumpTokens() {
-//	if logging {
-//		log.Print("dumping tokens...")
-//	}
-//	for {
-//		if logging {
-//			log.Print("waiting for token")
-//		}
-//		var theToken token
-//		theToken = <-tokenChan
-//		if theToken.theType == eofTokenType {
-//			break
-//		}
-//		if logging {
-//		log.Printf("%d: token  %s", theToken.lineNumber, theToken.text)
-//			}
-//	}
-//	if logging {
-//		log.Print("all tokens read")
-//	}
-//	linesDone <- 1
-//}
-
 /* theParser is the parser */
 var theParser parser
 
@@ -70,9 +47,7 @@ func (theParser *parser) parse() {
 func (theParser *parser) parsePage() {
 	theParser.expectIdent("page")
 	pageName := theParser.tokText()
-	if logging {
-		log.Printf("page name: '%s'", pageName)
-	}
+	logfIfLogging("page name: '%s'", pageName)
 	theParser.getToken()
 	thePage := page{local: make([]string, 0), theFragmentsByName: make(map[string]*fragment, 0), theName: pageName}
 	thePage.theFragments = theParser.parseBody([]string{"page"})
@@ -88,15 +63,11 @@ func (theParser *parser) parsePage() {
 
 /* parseBody */
 func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragment) {
-	if logging {
-		log.Printf("parsing body")
-	}
+	logfIfLogging("parsing body")
 	theFragments = make([]*fragment, 0)
 	for !theParser.stopped(stopIdents) {
 		theFragment := &fragment{theFragments: make([]*fragment, 0), name: "", text: "", auxName: "", actionFragments: make([]*fragment, 0)}
-		if logging {
-			log.Printf("getting fragment with token: %s", theParser.tokText())
-		}
+		logfIfLogging("getting fragment with token: %s", theParser.tokText())
 		switch theParser.tokTyp() {
 		case identTokenType:
 			switch theParser.tokText() {
@@ -104,18 +75,14 @@ func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragmen
 				theFragment.theFragType = linkFragType
 				theParser.expectIdent("link")
 				if theParser.tokTyp() == identTokenType {
-					if logging {
-						log.Printf("link name: %s", theParser.tokText())
-					}
+					logfIfLogging("link name: %s", theParser.tokText())
 					theFragment.name = theParser.tokText()
 					theParser.getToken()
 				}
 				theFragment.theFragments = theParser.parseBody([]string{"end", "page", "goto", "act"})
 				if theParser.tokIsIdent("goto") {
 					theParser.expectIdent("goto")
-					if logging {
-						log.Printf("goto target: %s", theParser.tokText())
-					}
+					logfIfLogging("goto target: %s", theParser.tokText())
 					theFragment.auxName = theParser.tokText()
 					theParser.getToken()
 				} else if theParser.tokIsIdent("end") {
@@ -142,9 +109,7 @@ func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragmen
 				theParser.expectIdent("end")
 			case "include":
 				theParser.expectIdent("include")
-				if logging {
-					log.Printf("include target: %s", theParser.tokText())
-				}
+				logfIfLogging("include target: %s", theParser.tokText())
 				theFragment.theFragType = includeFragType
 				theFragment.auxName = theParser.tokText()
 				theParser.getToken() //target
@@ -194,11 +159,10 @@ func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragmen
 	return false
 }
 
-/* getToken gets a new token */ func (theParser *parser) getToken() {
+/* getToken gets a new token */
+func (theParser *parser) getToken() {
 	theParser.theCurrentToken = <-tokenChan
-	if logging {
-		log.Printf("parsing token: '%s'", theParser.theCurrentToken.text)
-	}
+	logfIfLogging("parsing token: '%s'", theParser.theCurrentToken.text)
 	if theParser.tokTyp() == eofTokenType && logging {
 		log.Printf("end of input")
 	}

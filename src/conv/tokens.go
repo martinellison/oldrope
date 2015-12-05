@@ -51,9 +51,7 @@ const (
 	setTokenState(textState)
 	for {
 		scanState.line = <-lineChan
-		if logging {
-			log.Printf("%d inline: '%s' (%d) eof: %t", scanState.line.number, scanState.line.text, len(scanState.line.text), scanState.line.eof)
-		}
+		logfIfLogging("%d inline: '%s' (%d) eof: %t", scanState.line.number, scanState.line.text, len(scanState.line.text), scanState.line.eof)
 		scanState.lineLen = len(scanState.line.text)
 		scanState.charPos = 0
 		for scanState.charPos < scanState.lineLen {
@@ -250,9 +248,7 @@ const (
 	if tokenText == "" && theTokenType != eofTokenType {
 		return
 	}
-	if logging {
-		log.Printf("emitting token: %s", tokenText)
-	}
+	logfIfLogging("emitting token: %s", tokenText)
 	theToken := token{theType: theTokenType, text: tokenText, lineNumber: scanState.line.number}
 	scanState.tokenText = make([]byte, 0)
 	tokenChan <- theToken
