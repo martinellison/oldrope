@@ -1,4 +1,0 @@
-twine
-=====
-
-Contains Twine games.

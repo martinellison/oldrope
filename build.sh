@@ -1,5 +1,15 @@
-cd ~/git/twine 
-export GOPATH=~/git/twine 
+reset
+export BASE=$(git rev-parse --show-toplevel)
+MACHINE=`uname -n`
+if [[ $MACHINE == 'edward' ]]
+then
+	export GOX=/home/martin/gocode
+else
+	export GOX=/work/golang
+fi
+
+cd $BASE
+export GOPATH=$GOX:$BASE
 go fmt conv
 FMTRES=$?
 if [[ $FMTRES != 0 ]]
@@ -8,7 +18,7 @@ then
 	exit 1
 fi
 
-go build conv	
+go build conv
 BUILDRES=$?
 	if [[ $BUILDRES != 0 ]]
 	then

@@ -5,8 +5,15 @@ import (
 	"fmt"
 	"html"
 	"regexp"
+	"strings"
 )
 
+/* outData contains all the data required for generating pages */
+type outData struct {
+	Pages []*outPage
+}
+
+/* makeGenData builds theOutData with page data */
 func makeGenData() {
 	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
 	for _, page := range thePageSet {
@@ -15,169 +22,217 @@ func makeGenData() {
 		theOutData.Pages = append(theOutData.Pages, outPage)
 	}
 }
-func makeOutPage(theName string) (theOutPage *outPage) {
-	theOutPage = &outPage{Name: theName, SetLines: make([]string, 0, 0), FixLines: make([]string, 0, 0), RedisplayLines: make([]string, 0, 0), Refixes: make([]string, 0, 0)}
-	return
-}
-func (theOutPage *outPage) codePage(thePage *page) {
-	for _, theFragment := range thePage.theFragments {
-		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, true)
-		theOutPage.SetLines = append(theOutPage.SetLines, subOutFrag.SetLines...)
-		theOutPage.FixLines = append(theOutPage.FixLines, subOutFrag.FixLines...)
-		theOutPage.RedisplayLines = append(theOutPage.RedisplayLines, subOutFrag.RedisplayLines...)
-		theOutPage.Refixes = append(theOutPage.Refixes, subOutFrag.Refixes...)
-	}
+
+/* outPage contains the data for generating a single page */
+type outPage struct {
+	Name      string
+	InitLines string
+	SetLines  string
+	FixLines  string
 }
 
-var autoLink int
+/* makeOutPage creates and initialises a new outPage*/
+func makeOutPage(theName string) (theOutPage *outPage) {
+	theOutPage = &outPage{Name: theName, InitLines: "", SetLines: "", FixLines: ""}
+	return
+}
+
+/* codePage creates the code for a page */
+func (theOutPage *outPage) codePage(thePage *page) {
+	theInitLines := make([]*lineItem, 0, 0)
+	theSetLines := make([]*lineItem, 0, 0)
+	theFixLines := make([]*lineItem, 0, 0)
+	for _, theFragment := range thePage.theFragments {
+		theOutFragment := theFragment.code()
+		theInitLines = append(theInitLines, theOutFragment.InitLines...)
+		theSetLines = append(theSetLines, theOutFragment.SetLines...)
+		theFixLines = append(theFixLines, theOutFragment.FixLines...)
+	}
+	theOutPage.InitLines = collapse(theInitLines)
+	theOutPage.SetLines = collapse(theSetLines)
+	theOutPage.FixLines = collapse(theFixLines)
+}
+
+/* autoLink */ var autoLink int
+
+/* allSpace is a regular expression for a string of all white space */
 var allSpace *regexp.Regexp
 
 func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
 
-func (theOutFrag *outPage) codeFragment(theFragment *fragment, topLevel bool) {
-	//theOutFrag = new(outPage)
+/* isAllSpace tests whether a string is all white space  */
+func isAllSpace(s string) bool { return allSpace.MatchString(s) }
+
+/* escapeAll converts a string to HTML escape characters. All characters are converted, even a..z */
+func escapeAll(inString string) string {
+	outSegs := make([]string, 0, 0)
+	for _, rune := range inString {
+		outSegs = append(outSegs, fmt.Sprintf("&#%d;", rune))
+	}
+	return strings.Join(outSegs, "")
+}
+
+/* code converts a fragment to javascript code */
+func (theFragment *fragment) code() (theOutFragment *outFragment) {
+	theOutFragment = new(outFragment)
+	theOutFragment.init()
 	comprText := compress(theFragment.text)
-	escapeText := html.EscapeString(comprText)
+	escapeText := ""
+	if hashText {
+		escapeText = escapeAll(comprText)
+	} else {
+		escapeText = html.EscapeString(comprText)
+	}
 	fragName := theFragment.name
 	if fragName == "" {
 		autoLink++
 		fragName = fmt.Sprintf("z%d", autoLink)
 	}
-	theOutFrag.Name = fragName
-	fragNameExtend := fragName + "-x"
-	fragIdAttr := " id=\"" + fragName + "\" "
-	fragIdExtendAttr := " id=\"" + fragNameExtend + "\" "
-	mainLT := setLineType
-	fixLT := fixLineType
-	if !topLevel {
-		mainLT = redisplayLineType
-		fixLT = refixLineType
-	}
-	//	subset := true
 	switch theFragment.theFragType {
-	case spanFragType, divFragType:
-		if topLevel {
-			tag := ifThenElse(theFragment.theFragType == spanFragType, "span", "div")
-			spanText := "parts.push('<" + tag + fragIdAttr + ">" + escapeText + "');"
-			theOutFrag.addLine(spanText, setLineType)
-			theOutFrag.addLine("ld.s"+fragName+"=false;", setLineType)
-			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", redisplayLineType)
-		} else {
-			theOutFrag.addLine("if (ld.s"+fragName+") {parts=[];", redisplayLineType)
-		}
+	case spanFragType:
+		theOutFragment.includeOutSubfragment(outBlock(fragName, "span", theFragment.actionFragments))
+	case divFragType:
+		theOutFragment.includeOutSubfragment(outBlock(fragName, "div", theFragment.actionFragments))
 	case paraFragType:
-		paraText := "parts.push('<p" + fragIdAttr + ">" + escapeText + "');"
-		theOutFrag.addLine(paraText, mainLT)
+
+		theOutFragment.includeOutSubfragment(outBlock(fragName, "p", theFragment.actionFragments))
 	case jsCodeFragType:
-		theOutFrag.addLine(comprText, mainLT)
+		theOutFragment.SetLines.addStr(comprText)
 	case jsExprFragType:
-		exprText := "parts.push(" + comprText + ");"
-		theOutFrag.addLine(exprText, mainLT)
+		theOutFragment.SetLines.addStr("parts.push(" + comprText + ");")
 	case textFragType:
-		if !allSpace.MatchString(escapeText) {
-			textText := "parts.push('" + escapeText + "');"
-			theOutFrag.addLine(textText, mainLT)
+		if !isAllSpace(escapeText) {
+			theOutFragment.SetLines.addStrPush(escapeText)
+		}
+	case linkFragType:
+		if theFragment.auxName == "" {
+			theOutFragment.includeOutSubfragment(outOnPageLink(fragName, theFragment.theFragments))
+			theOutFragment.includeOutSubfragment(outBlock(fragName, "span", theFragment.actionFragments))
+		} else {
+			theOutFragment.includeOutSubfragment(outOffPageLink(fragName, theFragment.auxName, theFragment.theFragments))
 		}
 	case htmlFragType:
-		if !allSpace.MatchString(comprText) {
-			htmlText := "parts.push('<" + comprText + ">');"
-			theOutFrag.addLine(htmlText, mainLT)
-		}
-	case linkFragType:
-		textText := "parts.push('<a" + fragIdExtendAttr + ">');"
-		theOutFrag.addLine(textText, mainLT)
-		code := ""
-		if theFragment.auxName != "" {
-			code = " setPage('" + theFragment.auxName + "'); displayPage();"
-		} else {
-			code = " ld.s" + fragName + "=true; displayPage();"
-		}
-		//	if topLevel {
-		linkFix := "setClick('" + fragNameExtend + "', function(){" + code + "});"
-		theOutFrag.addLine(linkFix, fixLT)
-		//	} else {
-		//		theOutFrag.addLine("if (ld.s"+fragName+") {", redisplayLineType)
-		//	}
-		if theFragment.auxName == "" {
-			theOutFrag.addLine("if (ld.s"+fragName+") {", mainLT)
-			theOutFrag.addLine("if (ld.s"+fragName+") {", fixLT)
-			theOutFrag.addLine("/*"+theFragment.name+"*/", fixLT)
-		}
+		theOutFragment.SetLines.addStrPush("<" + comprText + ">")
 	case includeFragType:
-		theOutFrag.addLine("pages."+theFragment.auxName+".set(parts);", setLineType)
-		theOutFrag.addLine("pages."+theFragment.auxName+".fix();", fixLineType)
-		theOutFrag.addLine("pages."+theFragment.auxName+".redisplay();", redisplayLineType)
-		theOutFrag.addLine("pages."+theFragment.auxName+".refix();", refixLineType)
+		theOutFragment.InitLines.addStr("pages." + theFragment.auxName + ".init(parts);")
+		theOutFragment.SetLines.addStr("pages." + theFragment.auxName + ".display(parts);")
+		theOutFragment.FixLines.addStr("pages." + theFragment.auxName + ".fix();")
 	default:
 	}
-	for _, theFragment := range theFragment.theFragments {
-		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, false)
-		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
-		theOutFrag.FixLines = append(theOutFrag.FixLines, subOutFrag.FixLines...)
-		theOutFrag.RedisplayLines = append(theOutFrag.RedisplayLines, subOutFrag.RedisplayLines...)
-		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
-	}
-	for _, theFragment := range theFragment.actionFragments {
-		subOutFrag := makeOutPage(theFragment.name)
-		subOutFrag.codeFragment(theFragment, false)
-		theOutFrag.SetLines = append(theOutFrag.SetLines, subOutFrag.SetLines...)
-		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
-		theOutFrag.FixLines = append(theOutFrag.RedisplayLines, subOutFrag.FixLines...)
-		theOutFrag.Refixes = append(theOutFrag.Refixes, subOutFrag.Refixes...)
-	}
+	return
+}
 
-	switch theFragment.theFragType {
-	case spanFragType, divFragType:
-		if topLevel {
-			tag := ifThenElse(theFragment.theFragType == spanFragType, "span", "div")
-			theOutFrag.addLine("parts.push('</"+tag+">');", setLineType)
-			theOutFrag.addLine("/*"+theFragment.name+"*/", redisplayLineType)
-			theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", redisplayLineType)
-		} else {
-			theOutFrag.addLine("/*"+theFragment.name+"*/", setLineType)
-			theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", setLineType)
-		}
-	case paraFragType:
-		theOutFrag.addLine("parts.push('</p>');", mainLT)
-	case linkFragType:
-		//theOutFrag.addLine("}", fixLineType)
-		theOutFrag.addLine("parts.push('</a>');", mainLT)
-		theOutFrag.addLine("/*"+theFragment.name+"*/", redisplayLineType)
-		if theFragment.auxName == "" {
-			if topLevel {
-				theOutFrag.addLine("setHtml('"+fragName+"',parts.join(','));}", mainLT)
-			} else {
-				theOutFrag.addLine("}", mainLT)
-			}
-			theOutFrag.addLine("/*"+theFragment.name+"*/", fixLT)
-			theOutFrag.addLine("}", fixLT)
-		}
-	default:
+/* outOffPageLink codes an out-of-page link */
+func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
+	theOutFragment = new(outFragment)
+	theOutFragment.init()
+	theOutFragment.SetLines.addStrPush("<a id='" + id + "'>")
+	fixLine := "setClick('" + id + "', function(){setPage('" + targetPage + "');});"
+	theOutFragment.FixLines.addStr(fixLine)
+	theOutFragment.includeSubfragments(subFragments)
+	theOutFragment.SetLines.addStrPush("</a>")
+	return
+}
+
+/* outOnPageLink codes an on-page link */
+func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
+	theOutFragment = new(outFragment)
+	theOutFragment.init()
+	theOutFragment.InitLines.addStr("df." + id + "=false;")
+	theOutFragment.SetLines.addStrPush("<a id='" + id + "'>")
+	theOutFragment.FixLines.addStr("setClick('" + id + "', function(){df." + id + "=true; displayPage();});")
+	theOutFragment.includeSubfragments(subFragments)
+	theOutFragment.SetLines.addStrPush("</a>")
+	return
+}
+
+/* outBlock codes  a span or div */
+func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
+	theOutFragment = new(outFragment)
+	theOutFragment.init()
+	theOutFragment.SetLines.addStr("if (df." + id + ") {")
+	theOutFragment.SetLines.addStrPush("<" + tag + ">")
+	theOutFragment.FixLines.addStr("if (df." + id + ") {")
+	theOutFragment.includeSubfragments(subFragments)
+	theOutFragment.SetLines.addStrPush("</" + tag + ">")
+	theOutFragment.SetLines.addStr("}")
+	theOutFragment.FixLines.addStr("}")
+	return
+}
+
+/* outFragment represents a fragment of code */ type outFragment struct {
+	InitLines lineItemSet
+	SetLines  lineItemSet
+	FixLines  lineItemSet
+}
+
+/* init */ func (theOutFragment *outFragment) init() {
+	theOutFragment.InitLines = make([]*lineItem, 0, 0)
+	theOutFragment.SetLines = make([]*lineItem, 0, 0)
+	theOutFragment.FixLines = make([]*lineItem, 0, 0)
+}
+
+/* includeSubfragments copies the line items from sub-fragments into a fragment */
+func (theOutFragment *outFragment) includeSubfragments(subFragments []*fragment) {
+	for _, theSubFragment := range subFragments {
+		theOutSubfragment := theSubFragment.code()
+		theOutFragment.includeOutSubfragment(theOutSubfragment)
 	}
 }
 
-type fragCode struct {
+/* includeOutSubfragment copies the line items from a sub-fragment into a fragment */
+func (theOutFragment *outFragment) includeOutSubfragment(theOutSubfragment *outFragment) {
+	theOutFragment.InitLines.includeSubLineSet(&theOutSubfragment.InitLines)
+	theOutFragment.SetLines.includeSubLineSet(&theOutSubfragment.SetLines)
+	theOutFragment.FixLines.includeSubLineSet(&theOutSubfragment.FixLines)
 }
-type lineType int
 
-const (
-	setLineType lineType = iota
-	fixLineType
-	redisplayLineType
-	refixLineType
-)
+/* a lineItemSet is a sequence of lineItems*/
+type lineItemSet []*lineItem
 
-func (theOutPage *outPage) addLine(line string, theLineType lineType) {
-	switch theLineType {
-	case setLineType:
-		theOutPage.SetLines = append(theOutPage.SetLines, line)
-	case fixLineType:
-		theOutPage.FixLines = append(theOutPage.FixLines, line)
-	case redisplayLineType:
-		theOutPage.RedisplayLines = append(theOutPage.RedisplayLines, line)
-	case refixLineType:
-		theOutPage.Refixes = append(theOutPage.Refixes, line)
+/* addStr creates a line item without pushing */
+func (theOutLineSet *lineItemSet) addStr(theString string) {
+	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString})
+}
+
+/* addStrPush creates a line item with pushing */
+func (theOutLineSet *lineItemSet) addStrPush(theString string) {
+	*theOutLineSet = append(*theOutLineSet, &lineItem{theText: theString, pushing: true})
+}
+
+/* includeSubLineSet appends a lineItemSet */
+func (theOutLineSet *lineItemSet) includeSubLineSet(theSubOutLineSet *lineItemSet) {
+	*theOutLineSet = append(*theOutLineSet, *theSubOutLineSet...)
+}
+
+/* collapse combines the line items into a string */
+func collapse(theLineItems []*lineItem) string {
+	outParts := make([]string, 0, len(theLineItems))
+	pushing := false
+	for _, outPart := range theLineItems {
+		if !pushing && outPart.pushing {
+			outParts = append(outParts, "parts.push(\"")
+		} else if pushing && !outPart.pushing {
+			outParts = append(outParts, "\");")
+		}
+		outParts = append(outParts, outPart.theText)
+		pushing = outPart.pushing
 	}
+	if pushing {
+		outParts = append(outParts, "\");")
+	}
+	return strings.Join(outParts, "")
+}
+
+/* a lineItem represents some text that will be output. If pushing is set, it needs to be quoted and pushed onto the parts array. */
+type lineItem struct {
+	theText string
+	pushing bool
+}
+
+func (theLineItem lineItem) String() string {
+	if theLineItem.pushing {
+		return "*push* " + theLineItem.theText
+	}
+	return theLineItem.theText
 }
