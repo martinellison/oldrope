@@ -1,8 +1,8 @@
 Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
 
-# Convertor
+# OldRope
 
-This program creates 'choose your own adventure' games as a single HTML file. It has a similar function to Twine http://twinery.org (and Twine 2) but the games are simpler to deploy, install and play as there is only one HTML/Javascript file to distribute. Also the game is more robust as it does not depend on any external files.
+OldRope creates 'choose your own adventure' games as a single HTML file. It has a similar function to Twine http://twinery.org (and Twine 2) but the games are simpler to deploy, install and play as there is only one HTML/Javascript file to distribute. Also the game is more robust as it does not depend on any external files.
 
 The convertor reads in a text file in its own format (different from Twine or Twine 2 formats) and generates the HTML/Javascript file. The syntax of the input file is somewhat unwieldy and may change in later versions.
 
