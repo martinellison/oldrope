@@ -1,5 +1,6 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-// gen.go
+
+// gen.go (code generator)
 package main
 
 import (
@@ -87,11 +88,11 @@ func (theGenerator *generator) genHeader(w io.Writer) {
 }
 
 /* genJsStart generates the fixed part of the output file */
-func (theGenerator *generator) genJsStart(w io.Writer) {
+func (theGenerator *generator) genJsStart(w io.Writer, startPageName string) {
 	w.Write([]byte(compress(
 		`var gd = {};
   var ld = {};
-  var currentPage = 'start';
+  var currentPage = '` + startPageName + `';
   var cp;
   var pages;
   var displayPage = function() { var parts = [];

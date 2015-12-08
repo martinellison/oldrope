@@ -1,5 +1,6 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-// parser.go
+
+// parser.go (parser for input)
 package main
 
 import (
@@ -17,7 +18,7 @@ type parser struct {
 }
 
 /* parse runs the parse (top-level parser) */
-func (theParser *parser) parse() {
+func (theParser *parser) parse(theParseChan chan *pageSet) {
 	defer func() {
 		rec := recover()
 		if rec == nil {
@@ -25,12 +26,15 @@ func (theParser *parser) parse() {
 		}
 		os.Stderr.WriteString(fmt.Sprintf("parse: internal error: %v", rec))
 	}()
+	thePageSet := new(pageSet)
+	thePageSet.init()
+	thePageSet.pages = make(map[string]page, 0)
 	theParser.getToken()
 	for theParser.tokTyp() != eofTokenType {
 		if theParser.tokTyp() == identTokenType {
 			switch theParser.tokText() {
 			case "page":
-				theParser.parsePage()
+				theParser.parsePage(thePageSet)
 			default:
 				reportError(fmt.Sprintf("unknown identifier: %s", theParser.theCurrentToken.text), theParser.theCurrentToken.lineNumber)
 				theParser.getToken()
@@ -42,10 +46,11 @@ func (theParser *parser) parse() {
 			theParser.getToken()
 		}
 	}
+	theParseChan <- thePageSet
 }
 
 /* parsePage parses a page directive */
-func (theParser *parser) parsePage() {
+func (theParser *parser) parsePage(thePageSet *pageSet) {
 	theParser.expectIdent("page")
 	pageName := theParser.tokText()
 	logfIfLogging("page name: '%s'", pageName)
@@ -53,7 +58,7 @@ func (theParser *parser) parsePage() {
 	thePage := page{local: make([]string, 0), theFragmentsByName: make(map[string]*fragment, 0), theName: pageName}
 	thePage.theFragments = theParser.parseBody([]string{"page"})
 	if thePage.theName != "" {
-		thePageSet[thePage.theName] = thePage
+		thePageSet.pages[thePage.theName] = thePage
 	}
 	for _, fr := range thePage.theFragments {
 		if fr.name != "" {
@@ -192,7 +197,10 @@ func (theParser *parser) expectIdent(id string) {
 	}
 }
 
-/* */ type pageSet map[string]page
+/* */ type pageSet struct {
+	pages         map[string]page
+	startPageName string
+}
 
 /* */ type page struct {
 	local              []string
@@ -249,21 +257,16 @@ const (
 	auxName         string
 }
 
-/* */ var thePageSet pageSet
-
-/* */ var startPageName string
-
-/* */ func init() {
-	thePageSet = make(map[string]page, 0)
-	startPageName = "start"
+/* */ func (thePageSet *pageSet) init() {
+	thePageSet.startPageName = "start"
 }
 
-/* */ func dumpPages() {
+/* */ func dumpPages(thePageSet *pageSet) {
 	if !logging {
 		return
 	}
 	log.Print("pages as parsed:")
-	for _, page := range thePageSet {
+	for _, page := range thePageSet.pages {
 		log.Printf("--- page %s ---\n", page.theName)
 		for _, fr := range page.theFragments {
 			dumpFragment(fr, "\t")

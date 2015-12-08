@@ -1,5 +1,6 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-// code.go
+
+// code.go (code generator)
 package main
 
 import (
@@ -15,9 +16,9 @@ type outData struct {
 }
 
 /* makeGenData builds theOutData with page data */
-func (theOutData *outData) makeGenData() {
-	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
-	for _, page := range thePageSet {
+func (theOutData *outData) makeGenData(thePageSet *pageSet) {
+	theOutData.Pages = make([]*outPage, 0, len(thePageSet.pages))
+	for _, page := range thePageSet.pages {
 		outPage := makeOutPage(page.theName)
 		outPage.codePage(&page)
 		theOutData.Pages = append(theOutData.Pages, outPage)

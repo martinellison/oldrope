@@ -1,4 +1,6 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
+
+//lines.go (reads input file)
 package main
 
 import (
@@ -9,17 +11,17 @@ import (
 	"os"
 )
 
-/* a scanLine is a line as read in ready for tokenising*/
+/* a scanLine is a line as read in, ready for tokenising*/
 type scanLine struct {
 	text   string
 	number int
 	eof    bool
 }
 
-/* lineChan is the current scanLine*/
+/* lineChan is a channel that receives the scanLines */
 var lineChan chan scanLine
 
-/* linesDone is a channel that receives the scanLines*/
+/* linesDone is a channel that signals that the scan is complete*/
 var linesDone chan int
 
 /* getLines reads the input from a file and coverts it to scanLines */

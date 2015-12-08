@@ -1,5 +1,9 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-// conv.go
+
+// conv.go (main program)
+/* OldRope is a convertor for  text games. See README.mdown for a description.
+
+ */
 package main
 
 import (
@@ -38,23 +42,23 @@ import (
 	initLog(filePrefix, logFileName)
 	lineChan = make(chan scanLine)
 	go getLines(filePrefix + inFileName)
-	linesDone = make(chan int)
+	theParseChan := make(chan *pageSet)
 	var theTokeniser tokeniser
 	theTokeniser.init()
 	go theTokeniser.getTokens()
 	tokenChan = make(chan token)
 	var theParser parser
-	go theParser.parse()
-	<-linesDone
+	go theParser.parse(theParseChan)
+	thePageSet := <-theParseChan
 	if logging {
 		log.Print("all lines scanned and parsed.")
 	}
-	dumpPages()
+	dumpPages(thePageSet)
 	var theGenerator generator
 	//	theGenerator.init()
 	theGenerator.makeTemplate()
 	var theOutData outData
-	theOutData.makeGenData()
+	theOutData.makeGenData(thePageSet)
 	file, err := os.Create(filePrefix + outFileName)
 	if err != nil {
 		reportError(("cannot create file (" + filePrefix + outFileName + "): " + err.Error()), 0)
@@ -77,7 +81,7 @@ import (
 		file.WriteString("<script>")
 	}
 	theGenerator.genHeader(jsFile)
-	theGenerator.genJsStart(jsFile)
+	theGenerator.genJsStart(jsFile, thePageSet.startPageName)
 	theGenerator.expandTemplate(jsFile, theOutData)
 	theGenerator.genJsEnd(jsFile)
 	if !jsSeparateFile {

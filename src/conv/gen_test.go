@@ -25,7 +25,7 @@ func TestGen2(t *testing.T) {
 func TestGen3(t *testing.T) {
 	testBuffer := new(bytes.Buffer)
 	var theGenerator generator
-	theGenerator.genJsStart(testBuffer)
+	theGenerator.genJsStart(testBuffer, "fred")
 	testGen("var gd = {};", testBuffer, t)
 }
 func TestGen4(t *testing.T) {

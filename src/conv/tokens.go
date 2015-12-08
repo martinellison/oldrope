@@ -1,5 +1,6 @@
 // Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-// tokens.go
+
+// tokens.go (tokeniser (scanner) for input)
 package main
 
 import (
