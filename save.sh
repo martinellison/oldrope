@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
+
+# save files to git with a commit message
+
 TEXT=$1
 git commit -m "$TEXT" -a 
 find | grep "~$" | xargs rm

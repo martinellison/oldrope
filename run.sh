@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
+
+# run the convertor with some test data. Make the Javascript readable for checking.
+
 reset
 export BASE=$(git rev-parse --show-toplevel)
 cd $BASE

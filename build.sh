@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
+
+# build the convertor
+
 reset
 export BASE=$(git rev-parse --show-toplevel)
-MACHINE=`uname -n`
+#TODO: remove local dependency
+MACHINE=`uname -n` 
 if [[ $MACHINE == 'edward' ]]
 then
 	export GOX=/home/martin/gocode

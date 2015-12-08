@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
+
+# display the go doc output for this package 
+
 export BASE=$(git rev-parse --show-toplevel)
 cd $BASE/src/conv
 go doc -cmd -u
