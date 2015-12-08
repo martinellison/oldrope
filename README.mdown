@@ -10,7 +10,13 @@ Coding input text requires some knowldege of simple HTML and Javascript, as thes
 
 The convertor is written in Go (Golang).
 
+##Status
+
+OldRope is a new project and is in alpha status at present. Please raise any errors, comments and suggestions in GitHub (https://github.com/martinellison/oldrope).
+
 ## Usage
+
+Typical usage is `./conv -dir path/to/dir -in mygame.txt -out mygame.html`
 
   `-dir` *string*
     	directory for files (default ".")
@@ -19,6 +25,7 @@ The convertor is written in Go (Golang).
 
   `-hash`
     	use hash escapes for text
+The -hash option is used to replace all text strings with &#...; HTML entities to discourage casual browsing of the game text. Of course, this does not provide any security.
 		
   `-help`
     	display help
@@ -27,22 +34,17 @@ The convertor is written in Go (Golang).
     	input file name (default "test.data")
 		
   `-jsout` *string*
-    	Javascript output file name (if not specified, Javascript will be embedded in the HTML)
+    	Javascript output file name (if not specified, Javascript will be embedded in the HTML).
+The -jsout option is used to create a separate file with the Javascript. This can be run through a formatter if you want to browse the source.
+
+For example, `./conv -dir path/to/dir -in mygame.txt -out mygame.html -js mygame.js` will generate the Javascript to `mygame.js` and `mygame.html` will contain just the HTML with a script link to the Javascript. Usually, you do not want to do this but it is useful for debugging.
 		
   `-log` *string*
-    	log file name (for debugging)
+    	log file name (for debugging).
+The -log option generates a log file for debugging the convertor.
 		
   `-out` *string*
     	output file name (default "testout.html")
-
-Typical usage is `./conv -dir path/to/dir -in mygame.txt -out mygame.html`
-
-The -jsout option is used to create a separate file with the Javascript. This can be run through a formatter if you want to browse the source.
-
-The -log option is for debugging the convertor.
-
-
-The -hash option is used to replace all text strings with &#...; HTML entities to discourage casual browsing of the game text. Of course, this does not provide any security.
 
 ## Input language
 

@@ -115,4 +115,81 @@ func testParseBody(tag string, theFragType fragType, t *testing.T) {
 	assert.Equal(theFragType, theFragments[1].theFragType)
 }
 
+func TestParserParseInclude1(t *testing.T) {
+	assert := assert.New(t)
+	tokenChan = make(chan token)
+	go makeTokens([]token{token{theType: identTokenType, text: "include"}, token{theType: textTokenType, text: "fred"}, token{theType: eofTokenType}})
+	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
+	theFragments := theParser.parseBody([]string{"end"})
+	assert.Equal(2, len(theFragments))
+	assert.Equal(textFragType, theFragments[0].theFragType)
+	assert.Equal(includeFragType, theFragments[1].theFragType)
+	assert.Equal("fred", theFragments[1].auxName)
+}
+
+func TestParserParseCode1(t *testing.T) {
+	assert := assert.New(t)
+	theFragment := testParseFrag(jsCodeTokenType, jsCodeFragType, assert)
+	assert.Equal("fred", theFragment.text)
+}
+func TestParserParseCode2(t *testing.T) {
+	assert := assert.New(t)
+	theFragment := testParseFrag(jsExprTokenType, jsExprFragType, assert)
+	assert.Equal("fred", theFragment.text)
+}
+func TestParserParseCode3(t *testing.T) {
+	assert := assert.New(t)
+	theFragment := testParseFrag(htmlTokenType, htmlFragType, assert)
+	assert.Equal("fred", theFragment.text)
+}
+func testParseFrag(theTokenType tokenType, theFragType fragType, assert *assert.Assertions) (theFragmant *fragment) {
+	tokenChan = make(chan token)
+	go makeTokens([]token{token{theType: theTokenType, text: "fred"}, token{theType: eofTokenType}})
+	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
+	theFragments := theParser.parseBody([]string{"end"})
+	assert.Equal(2, len(theFragments))
+	assert.Equal(textFragType, theFragments[0].theFragType)
+	assert.Equal(theFragType, theFragments[1].theFragType)
+	return theFragments[1]
+}
+func TestParserParseLink1(t *testing.T) {
+	//logging = true
+	assert := assert.New(t)
+	tokenChan = make(chan token)
+	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "goto"}, token{theType: identTokenType, text: "bill"}, token{theType: eofTokenType}})
+	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
+	theFragments := theParser.parseBody([]string{"end"})
+	assert.Equal(2, len(theFragments))
+	assert.Equal(textFragType, theFragments[0].theFragType)
+	assert.Equal(linkFragType, theFragments[1].theFragType)
+	assert.Equal("fred", theFragments[1].name)
+	assert.Equal("bill", theFragments[1].auxName)
+}
+func TestParserParseLink2(t *testing.T) {
+	//logging = true
+	assert := assert.New(t)
+	tokenChan = make(chan token)
+	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "act"}, token{theType: identTokenType, text: "end"}, token{theType: eofTokenType}})
+	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
+	theFragments := theParser.parseBody([]string{"end"})
+	assert.Equal(2, len(theFragments))
+	assert.Equal(textFragType, theFragments[0].theFragType)
+	assert.Equal(linkFragType, theFragments[1].theFragType)
+	assert.Equal("fred", theFragments[1].name)
+	assert.Equal("", theFragments[1].auxName)
+}
+func TestParserParseLink3(t *testing.T) {
+	//logging = true
+	assert := assert.New(t)
+	tokenChan = make(chan token)
+	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "end"}, token{theType: eofTokenType}})
+	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
+	theFragments := theParser.parseBody([]string{"end"})
+	assert.Equal(2, len(theFragments))
+	assert.Equal(textFragType, theFragments[0].theFragType)
+	assert.Equal(linkFragType, theFragments[1].theFragType)
+	assert.Equal("fred", theFragments[1].name)
+	assert.Equal("", theFragments[1].auxName)
+}
+
 // This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.
