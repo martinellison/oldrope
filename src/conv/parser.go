@@ -9,9 +9,6 @@ import (
 	"os"
 )
 
-/* theParser is the parser */
-//var theParser parser
-
 /* a parser contains the parse state  */
 type parser struct {
 	theCurrentToken token
@@ -67,7 +64,7 @@ func (theParser *parser) parsePage(thePageSet *pageSet) {
 	}
 }
 
-/* parseBody */
+/* parseBody parses the body of a page description. The directive will be terminated by any stop identifier. */
 func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragment) {
 	logfIfLogging("parsing body")
 	theFragments = make([]*fragment, 0)
@@ -150,7 +147,8 @@ func (theParser *parser) parseBody(stopIdents []string) (theFragments []*fragmen
 	return
 }
 
-/* stopped detects a stop token */ func (theParser *parser) stopped(stopIdents []string) bool {
+/* stopped detects a stop token */
+func (theParser *parser) stopped(stopIdents []string) bool {
 	if theParser.tokTyp() == eofTokenType {
 		return true
 	}
@@ -197,20 +195,24 @@ func (theParser *parser) expectIdent(id string) {
 	}
 }
 
-/* */ type pageSet struct {
+/* a pageSet contains the results of the parse*/
+type pageSet struct {
 	pages         map[string]page
 	startPageName string
 }
 
-/* */ type page struct {
+/* a page contains the results of parsing a page description */
+type page struct {
 	local              []string
 	theFragments       []*fragment
 	theFragmentsByName map[string]*fragment
 	theName            string
 }
 
-/* */ type fragType int
+/* a fragType describes which type a fragment is*/
+type fragType int
 
+/* the different kinds of fragments */
 const (
 	spanFragType fragType = iota
 	divFragType
@@ -223,7 +225,8 @@ const (
 	includeFragType
 )
 
-/* */ func (theFragType fragType) String() string {
+/* dump a fragType for debugging */
+func (theFragType fragType) String() string {
 	switch theFragType {
 	case spanFragType:
 		return "span"
@@ -248,7 +251,8 @@ const (
 	}
 }
 
-/* */ type fragment struct {
+/* a fragment describes a fragment of input code*/
+type fragment struct {
 	theFragType     fragType
 	name            string
 	text            string
@@ -257,11 +261,13 @@ const (
 	auxName         string
 }
 
-/* */ func (thePageSet *pageSet) init() {
+/* init initialises a the pageSet */
+func (thePageSet *pageSet) init() {
 	thePageSet.startPageName = "start"
 }
 
-/* */ func dumpPages(thePageSet *pageSet) {
+/* dumpPages dumps all pages for debugging */
+func dumpPages(thePageSet *pageSet) {
 	if !logging {
 		return
 	}
@@ -274,7 +280,8 @@ const (
 	}
 }
 
-/* */ func dumpFragment(fr *fragment, indent string) {
+/* dumpFragment dumps a fragment for debugging*/
+func dumpFragment(fr *fragment, indent string) {
 	log.Printf("%s%s (%s): %s\n", indent, fr.name, fr.theFragType.String(), fr.text)
 	if fr.auxName != "" {
 		log.Printf("%sgoto:%s\n", indent, fr.auxName)

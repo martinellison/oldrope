@@ -5,17 +5,17 @@
 
 reset
 export BASE=$(git rev-parse --show-toplevel)
-#TODO: remove local dependency
-MACHINE=`uname -n` 
-if [[ $MACHINE == 'edward' ]]
-then
-	export GOX=/home/martin/gocode
-else
-	export GOX=/work/golang
-fi
 
+if [[ "$GOPATH" == "" ]]
+then
+	echo "set GOPATH to include " $BASE
+	exit 1
+fi
 cd $BASE
-export GOPATH=$GOX:$BASE
+if [[ ! -d $BASE/bin ]]
+then
+	mkdir $BASE/bin
+fi
 go fmt conv
 FMTRES=$?
 if [[ $FMTRES != 0 ]]
