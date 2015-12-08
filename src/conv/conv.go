@@ -39,16 +39,22 @@ import (
 	lineChan = make(chan scanLine)
 	go getLines(filePrefix + inFileName)
 	linesDone = make(chan int)
-	go getTokens()
+	var theTokeniser tokeniser
+	theTokeniser.init()
+	go theTokeniser.getTokens()
 	tokenChan = make(chan token)
+	var theParser parser
 	go theParser.parse()
 	<-linesDone
 	if logging {
 		log.Print("all lines scanned and parsed.")
 	}
 	dumpPages()
-	makeTemplate()
-	makeGenData()
+	var theGenerator generator
+	//	theGenerator.init()
+	theGenerator.makeTemplate()
+	var theOutData outData
+	theOutData.makeGenData()
 	file, err := os.Create(filePrefix + outFileName)
 	if err != nil {
 		reportError(("cannot create file (" + filePrefix + outFileName + "): " + err.Error()), 0)
@@ -64,20 +70,20 @@ import (
 			log.Fatal(err)
 		}
 	}
-	genStart(file)
+	theGenerator.genStart(file)
 	if jsSeparateFile {
 		file.WriteString("<script src='" + jsFileName + "'></script>")
 	} else {
 		file.WriteString("<script>")
 	}
-	genHeader(jsFile)
-	genJsStart(jsFile)
-	expandTemplate(jsFile)
-	genJsEnd(jsFile)
+	theGenerator.genHeader(jsFile)
+	theGenerator.genJsStart(jsFile)
+	theGenerator.expandTemplate(jsFile, theOutData)
+	theGenerator.genJsEnd(jsFile)
 	if !jsSeparateFile {
 		file.WriteString("</script>")
 	}
-	genEnd(file)
+	theGenerator.genEnd(file)
 	logIfLogging("file generated.")
 }
 
@@ -116,4 +122,5 @@ func logfIfLogging(msg string, params ...interface{}) {
 /* */ func reportError(msg string, lineNumber int) {
 	os.Stderr.WriteString(fmt.Sprintf("(%d): %s\n", lineNumber, msg))
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.

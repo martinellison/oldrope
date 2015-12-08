@@ -112,13 +112,15 @@ There is also a Windows 64-bit binary available, but it has not been tested on W
 
 The source can be checked out from github or downloaded.
 
-The only dependency is the Go (Golang http://golang.org) build system. All the imported packages are in the standard distribution.
+The only dependency for the convertor itself is the Go (Golang http://golang.org) build system. All the imported packages are in the standard distribution.
 
 The program can be built from source using the `build.sh` script included with the source distribution.
 
 The result is just a single executable.
 
 ### Dependencies
+
+The test scripts use github.com/stretchr/testify/assert
 
 The run.sh script uses js-beautify from https://github.com/beautify-web/js-beautify This is not a requirement for normal use; js-beautify is only used to de-obfuscate the generated Javascript for debugging.
 

@@ -54,7 +54,7 @@ func TestCodeOutPage1(t *testing.T) {
 }
 func TestCodeOutOffPageLink1(t *testing.T) {
 	assert := assert.New(t)
-	theOutFragment := outOffPageLink("fred", "bill", make([]*fragment, 0, 0))
+	theOutFragment := makeOutOffPageLink("fred", "bill", make([]*fragment, 0, 0))
 	assert.Equal(0, len(theOutFragment.InitLines))
 	assert.Equal("", collapse(theOutFragment.InitLines))
 	assert.Equal(2, len(theOutFragment.SetLines))
@@ -64,7 +64,7 @@ func TestCodeOutOffPageLink1(t *testing.T) {
 }
 func TestCodeOutOnPageLink1(t *testing.T) {
 	assert := assert.New(t)
-	theOutFragment := outOnPageLink("fred", make([]*fragment, 0, 0))
+	theOutFragment := makeOutOnPageLink("fred", make([]*fragment, 0, 0))
 	assert.Equal(1, len(theOutFragment.InitLines))
 	assert.Equal("df.fred=false;", collapse(theOutFragment.InitLines))
 	assert.Equal(2, len(theOutFragment.SetLines))
@@ -74,7 +74,7 @@ func TestCodeOutOnPageLink1(t *testing.T) {
 }
 func TestCodeOutBlock1(t *testing.T) {
 	assert := assert.New(t)
-	theOutFragment := outBlock("fred", "span", make([]*fragment, 0, 0))
+	theOutFragment := makeOutBlock("fred", "span", make([]*fragment, 0, 0))
 	assert.Equal(0, len(theOutFragment.InitLines))
 	assert.Equal("", collapse(theOutFragment.InitLines))
 	assert.Equal(4, len(theOutFragment.SetLines))
@@ -181,4 +181,5 @@ func TestCodeCode10(t *testing.T) {
 	assert.Equal(1, len(theOutFragment.FixLines))
 	assert.Equal("setClick('fred', function(){setPage('jane');});", collapse(theOutFragment.FixLines))
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.

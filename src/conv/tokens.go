@@ -28,10 +28,13 @@ const (
 	htmlTokenType
 )
 
-/* */ var tokenChan chan token
+/* tokenChan is a channel of tokens */
+var tokenChan chan token
 
-/* */ type scanLineState int
+/* a scanLineState is the current state of the tokeniser */
+type scanLineState int
 
+/* possible states of the tokeniser */
 const (
 	textState scanLineState = iota
 	commentState
@@ -41,7 +44,10 @@ const (
 	htmlState
 )
 
-/* */ func getTokens() {
+func (theTokeniser *tokeniser) init() { theTokeniser.state = textState }
+
+/* getTokens is the tokeniser. It divides the input text into tokens. */
+func (theTokeniser *tokeniser) getTokens() {
 	defer func() {
 		rec := recover()
 		if rec == nil {
@@ -49,156 +55,157 @@ const (
 		}
 		os.Stderr.WriteString(fmt.Sprintf("getTokens: internal error: %v", rec))
 	}()
-	setTokenState(textState)
+	theTokeniser.setTokenState(textState)
 	for {
-		scanState.line = <-lineChan
-		logfIfLogging("%d inline: '%s' (%d) eof: %t", scanState.line.number, scanState.line.text, len(scanState.line.text), scanState.line.eof)
-		scanState.lineLen = len(scanState.line.text)
-		scanState.charPos = 0
-		for scanState.charPos < scanState.lineLen {
-			//	log.Printf("%d: scan char is: '%s'", scanState.charPos, scanChars(1))
-			switch scanState.state {
+		theTokeniser.line = <-lineChan
+		logfIfLogging("%d inline: '%s' (%d) eof: %t", theTokeniser.line.number, theTokeniser.line.text, len(theTokeniser.line.text), theTokeniser.line.eof)
+		theTokeniser.lineLen = len(theTokeniser.line.text)
+		theTokeniser.charPos = 0
+		for theTokeniser.charPos < theTokeniser.lineLen {
+			//	log.Printf("%d: scan char is: '%s'", theTokeniser.charPos, scanChars(1))
+			switch theTokeniser.state {
 			case textState:
-				switch scanChars(2) {
+				switch theTokeniser.scanChars(2) {
 				case "/*":
-					emitToken(textTokenType)
-					scanState.state = commentState
-					scanState.charPos += 2
+					theTokeniser.emitToken(textTokenType)
+					theTokeniser.state = commentState
+					theTokeniser.charPos += 2
 				case "$/":
-					emitToken(textTokenType)
-					scanState.state = jsCodeState
-					scanState.charPos += 2
+					theTokeniser.emitToken(textTokenType)
+					theTokeniser.state = jsCodeState
+					theTokeniser.charPos += 2
 				case "$(":
-					emitToken(textTokenType)
-					scanState.state = jsExprState
-					scanState.charPos += 2
+					theTokeniser.emitToken(textTokenType)
+					theTokeniser.state = jsExprState
+					theTokeniser.charPos += 2
 				case "$[":
-					emitToken(textTokenType)
-					scanState.state = convState
-					scanState.charPos += 2
+					theTokeniser.emitToken(textTokenType)
+					theTokeniser.state = convState
+					theTokeniser.charPos += 2
 				case "$<":
-					emitToken(textTokenType)
-					scanState.state = htmlState
-					scanState.charPos += 2
+					theTokeniser.emitToken(textTokenType)
+					theTokeniser.state = htmlState
+					theTokeniser.charPos += 2
 				default:
-					charToToken()
+					theTokeniser.charToToken()
 				}
 			case commentState:
-				if scanChars(2) == "*/" {
+				if theTokeniser.scanChars(2) == "*/" {
 					//if logging {if logging {log.Print("end of comment")
-					setTokenState(textState)
-					scanState.charPos += 2
+					theTokeniser.setTokenState(textState)
+					theTokeniser.charPos += 2
 				} else {
-					scanState.charPos++
+					theTokeniser.charPos++
 				}
 			case jsCodeState:
-				if scanChars(2) == "/$" {
-					emitToken(jsCodeTokenType)
-					scanState.state = textState
-					scanState.charPos += 2
+				if theTokeniser.scanChars(2) == "/$" {
+					theTokeniser.emitToken(jsCodeTokenType)
+					theTokeniser.state = textState
+					theTokeniser.charPos += 2
 				} else {
-					charToToken()
+					theTokeniser.charToToken()
 				}
 			case jsExprState:
-				if scanChars(2) == ")$" {
-					emitToken(jsExprTokenType)
-					scanState.state = textState
-					scanState.charPos += 2
+				if theTokeniser.scanChars(2) == ")$" {
+					theTokeniser.emitToken(jsExprTokenType)
+					theTokeniser.state = textState
+					theTokeniser.charPos += 2
 				} else {
-					charToToken()
+					theTokeniser.charToToken()
 				}
 			case convState:
 				//	log.Printf("scanning directive: %s...", scanChars(5))
-				if scanChars(2) == "]$" {
+				if theTokeniser.scanChars(2) == "]$" {
 					//emitToken(convTokenType)
-					scanState.state = textState
-					scanState.charPos += 2
+					theTokeniser.state = textState
+					theTokeniser.charPos += 2
 				} else {
-					getConvToken()
+					theTokeniser.getConvToken()
 				}
 			case htmlState:
-				if scanChars(2) == ">$" {
-					emitToken(htmlTokenType)
-					scanState.state = textState
-					scanState.charPos += 2
+				if theTokeniser.scanChars(2) == ">$" {
+					theTokeniser.emitToken(htmlTokenType)
+					theTokeniser.state = textState
+					theTokeniser.charPos += 2
 				} else {
-					charToToken()
+					theTokeniser.charToToken()
 				}
 			default:
-				reportError("internal error, unknown scan state", scanState.line.number)
-				log.Fatalf("unknown scan state: %d", scanState.state)
-				scanState.charPos++
+				reportError("internal error, unknown scan state", theTokeniser.line.number)
+				log.Fatalf("unknown scan state: %d", theTokeniser.state)
+				theTokeniser.charPos++
 			}
 		}
 		logIfLogging("end of input line")
-		if scanState.line.eof {
+		if theTokeniser.line.eof {
 			logIfLogging("in lines at eof, emitting eof token")
 			break
 		}
 	}
-	switch scanState.state {
+	switch theTokeniser.state {
 	case textState:
-		emitToken(textTokenType)
+		theTokeniser.emitToken(textTokenType)
 		logIfLogging("in text at end")
 	case commentState:
-		reportError("in comment at end", scanState.line.number)
+		reportError("in comment at end", theTokeniser.line.number)
 	case jsCodeState:
-		emitToken(jsCodeTokenType)
-		reportError("in code at end", scanState.line.number)
+		theTokeniser.emitToken(jsCodeTokenType)
+		reportError("in code at end", theTokeniser.line.number)
 	case jsExprState:
-		emitToken(jsExprTokenType)
-		reportError("in expression at end", scanState.line.number)
+		theTokeniser.emitToken(jsExprTokenType)
+		reportError("in expression at end", theTokeniser.line.number)
 	case convState:
-		reportError("in directive at end", scanState.line.number)
+		reportError("in directive at end", theTokeniser.line.number)
 	case htmlState:
-		emitToken(htmlTokenType)
-		reportError("in html at end", scanState.line.number)
+		theTokeniser.emitToken(htmlTokenType)
+		reportError("in html at end", theTokeniser.line.number)
 	}
 	logIfLogging("emitting end of file token")
-	emitToken(eofTokenType)
+	theTokeniser.emitToken(eofTokenType)
 	linesDone <- 1
 	logIfLogging("all lines read")
 }
 
-/* */ func getConvToken() {
-	examineNextChar()
-	//log.Printf("looking for conv token, examining from: %c at: %d type: %s", scanState.nextChar, scanState.charPos, scanState.nextCharType)
-	switch scanState.nextCharType {
+/* getConvToken gets a token */
+func (theTokeniser *tokeniser) getConvToken() {
+	theTokeniser.examineNextChar()
+	//log.Printf("looking for conv token, examining from: %c at: %d type: %s", theTokeniser.nextChar, theTokeniser.charPos, theTokeniser.nextCharType)
+	switch theTokeniser.nextCharType {
 	case identCharType:
-		for scanState.nextCharType == identCharType || scanState.nextCharType == digitCharType {
-			charToToken()
+		for theTokeniser.nextCharType == identCharType || theTokeniser.nextCharType == digitCharType {
+			theTokeniser.charToToken()
 		}
-		emitToken(identTokenType)
+		theTokeniser.emitToken(identTokenType)
 	case digitCharType:
-		for scanState.nextCharType == digitCharType {
-			charToToken()
+		for theTokeniser.nextCharType == digitCharType {
+			theTokeniser.charToToken()
 		}
-		emitToken(numberTokenType)
+		theTokeniser.emitToken(numberTokenType)
 	case spaceCharType:
-		for scanState.nextCharType == spaceCharType {
-			scanState.charPos++
-			examineNextChar()
+		for theTokeniser.nextCharType == spaceCharType {
+			theTokeniser.charPos++
+			theTokeniser.examineNextChar()
 		}
 	case specialCharType:
-		charToToken()
-		emitToken(delimTokenType)
+		theTokeniser.charToToken()
+		theTokeniser.emitToken(delimTokenType)
 	case otherCharType:
-		for scanState.nextCharType == otherCharType {
-			charToToken()
+		for theTokeniser.nextCharType == otherCharType {
+			theTokeniser.charToToken()
 		}
-		emitToken(delimTokenType)
+		theTokeniser.emitToken(delimTokenType)
 	case stopCharType:
-		log.Printf("stop char detected %c in %s...", scanState.nextChar, scanChars(5))
-		scanState.charPos++
-		examineNextChar()
+		log.Printf("stop char detected %c in %s...", theTokeniser.nextChar, theTokeniser.scanChars(5))
+		theTokeniser.charPos++
+		theTokeniser.examineNextChar()
 	default:
-		log.Printf("unknown detected %c", scanState.nextChar)
-		scanState.charPos++
-		examineNextChar()
+		log.Printf("unknown detected %c", theTokeniser.nextChar)
+		theTokeniser.charPos++
+		theTokeniser.examineNextChar()
 	}
 }
 
-/* */ var scanState struct {
+type tokeniser struct {
 	lineLen      int
 	charPos      int
 	line         scanLine
@@ -209,49 +216,49 @@ const (
 	more         bool
 }
 
-/* */ func scanChars(leng int) (chars string) {
+/* */ func (theTokeniser *tokeniser) scanChars(leng int) (chars string) {
 	useLen := leng
-	if leng+scanState.charPos > scanState.lineLen {
-		useLen = scanState.lineLen - scanState.charPos
+	if leng+theTokeniser.charPos > theTokeniser.lineLen {
+		useLen = theTokeniser.lineLen - theTokeniser.charPos
 		//log.Printf("only returning %d chars", useLen)
 	}
-	return scanState.line.text[scanState.charPos : scanState.charPos+useLen]
+	return theTokeniser.line.text[theTokeniser.charPos : theTokeniser.charPos+useLen]
 }
 
-/* */ func charToToken() {
-	currentChar := scanState.line.text[scanState.charPos]
-	scanState.tokenText = append(scanState.tokenText, currentChar)
-	//	if scanState.charPos >= scanState.lineLen {
+/* */ func (theTokeniser *tokeniser) charToToken() {
+	currentChar := theTokeniser.line.text[theTokeniser.charPos]
+	theTokeniser.tokenText = append(theTokeniser.tokenText, currentChar)
+	//	if theTokeniser.charPos >= theTokeniser.lineLen {
 	//		if logging {if logging {log.Print("ran off end of line!")
 	//	}
-	scanState.charPos++
-	examineNextChar()
+	theTokeniser.charPos++
+	theTokeniser.examineNextChar()
 }
 
-/* */ func examineNextChar() {
-	if scanState.charPos >= scanState.lineLen {
+/* */ func (theTokeniser *tokeniser) examineNextChar() {
+	if theTokeniser.charPos >= theTokeniser.lineLen {
 		//if logging {if logging {log.Print("at end of line")
-		scanState.nextCharType = stopCharType
-		scanState.more = false
+		theTokeniser.nextCharType = stopCharType
+		theTokeniser.more = false
 		return
 	}
-	scanState.nextChar = scanState.line.text[scanState.charPos]
-	scanState.nextCharType = charTypes[scanState.nextChar]
+	theTokeniser.nextChar = theTokeniser.line.text[theTokeniser.charPos]
+	theTokeniser.nextCharType = charTypes[theTokeniser.nextChar]
 }
 
-/* */ func setTokenState(newState scanLineState) {
-	scanState.state = newState
-	scanState.tokenText = make([]byte, 0)
+/* */ func (theTokeniser *tokeniser) setTokenState(newState scanLineState) {
+	theTokeniser.state = newState
+	theTokeniser.tokenText = make([]byte, 0)
 }
 
-/* */ func emitToken(theTokenType tokenType) {
-	tokenText := string(scanState.tokenText)
+/* */ func (theTokeniser *tokeniser) emitToken(theTokenType tokenType) {
+	tokenText := string(theTokeniser.tokenText)
 	if tokenText == "" && theTokenType != eofTokenType {
 		return
 	}
 	logfIfLogging("emitting token: %s", tokenText)
-	theToken := token{theType: theTokenType, text: tokenText, lineNumber: scanState.line.number}
-	scanState.tokenText = make([]byte, 0)
+	theToken := token{theType: theTokenType, text: tokenText, lineNumber: theTokeniser.line.number}
+	theTokeniser.tokenText = make([]byte, 0)
 	tokenChan <- theToken
 }
 
@@ -310,4 +317,5 @@ const (
 	charTypes['_'] = identCharType
 	charTypes[']'] = stopCharType
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.

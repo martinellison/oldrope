@@ -15,7 +15,7 @@ type outData struct {
 }
 
 /* makeGenData builds theOutData with page data */
-func makeGenData() {
+func (theOutData *outData) makeGenData() {
 	theOutData.Pages = make([]*outPage, 0, len(thePageSet))
 	for _, page := range thePageSet {
 		outPage := makeOutPage(page.theName)
@@ -54,12 +54,16 @@ func (theOutPage *outPage) codePage(thePage *page) {
 	theOutPage.FixLines = collapse(theFixLines)
 }
 
-/* autoLink */ var autoLink int
+/* autoLink is used to name anonymous pages */
+var autoLink int
 
 /* allSpace is a regular expression for a string of all white space */
 var allSpace *regexp.Regexp
 
-func init() { allSpace = regexp.MustCompile(`^[\s]*$`) }
+func init() {
+	autoLink = 0
+	allSpace = regexp.MustCompile(`^[\s]*$`)
+}
 
 /* isAllSpace tests whether a string is all white space  */
 func isAllSpace(s string) bool { return allSpace.MatchString(s) }
@@ -91,12 +95,12 @@ func (theFragment *fragment) code() (theOutFragment *outFragment) {
 	}
 	switch theFragment.theFragType {
 	case spanFragType:
-		theOutFragment.includeOutSubfragment(outBlock(fragName, "span", theFragment.actionFragments))
+		theOutFragment.includeOutSubfragment(makeOutBlock(fragName, "span", theFragment.actionFragments))
 	case divFragType:
-		theOutFragment.includeOutSubfragment(outBlock(fragName, "div", theFragment.actionFragments))
+		theOutFragment.includeOutSubfragment(makeOutBlock(fragName, "div", theFragment.actionFragments))
 	case paraFragType:
 
-		theOutFragment.includeOutSubfragment(outBlock(fragName, "p", theFragment.actionFragments))
+		theOutFragment.includeOutSubfragment(makeOutBlock(fragName, "p", theFragment.actionFragments))
 	case jsCodeFragType:
 		theOutFragment.SetLines.addStr(comprText)
 	case jsExprFragType:
@@ -107,10 +111,10 @@ func (theFragment *fragment) code() (theOutFragment *outFragment) {
 		}
 	case linkFragType:
 		if theFragment.auxName == "" {
-			theOutFragment.includeOutSubfragment(outOnPageLink(fragName, theFragment.theFragments))
-			theOutFragment.includeOutSubfragment(outBlock(fragName, "span", theFragment.actionFragments))
+			theOutFragment.includeOutSubfragment(makeOutOnPageLink(fragName, theFragment.theFragments))
+			theOutFragment.includeOutSubfragment(makeOutBlock(fragName, "span", theFragment.actionFragments))
 		} else {
-			theOutFragment.includeOutSubfragment(outOffPageLink(fragName, theFragment.auxName, theFragment.theFragments))
+			theOutFragment.includeOutSubfragment(makeOutOffPageLink(fragName, theFragment.auxName, theFragment.theFragments))
 		}
 	case htmlFragType:
 		theOutFragment.SetLines.addStrPush("<" + comprText + ">")
@@ -123,8 +127,8 @@ func (theFragment *fragment) code() (theOutFragment *outFragment) {
 	return
 }
 
-/* outOffPageLink codes an out-of-page link */
-func outOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* makeOutOffPageLink codes an out-of-page link */
+func makeOutOffPageLink(id string, targetPage string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.SetLines.addStrPush("<a id='" + id + "'>")
@@ -135,8 +139,8 @@ func outOffPageLink(id string, targetPage string, subFragments []*fragment) (the
 	return
 }
 
-/* outOnPageLink codes an on-page link */
-func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* makeOutOnPageLink codes an on-page link */
+func makeOutOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.InitLines.addStr("df." + id + "=false;")
@@ -147,8 +151,8 @@ func outOnPageLink(id string, subFragments []*fragment) (theOutFragment *outFrag
 	return
 }
 
-/* outBlock codes  a span or div */
-func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
+/* makeOutBlock codes  a span or div */
+func makeOutBlock(id string, tag string, subFragments []*fragment) (theOutFragment *outFragment) {
 	theOutFragment = new(outFragment)
 	theOutFragment.init()
 	theOutFragment.SetLines.addStr("if (df." + id + ") {")
@@ -161,13 +165,14 @@ func outBlock(id string, tag string, subFragments []*fragment) (theOutFragment *
 	return
 }
 
-/* outFragment represents a fragment of code */ type outFragment struct {
+/* outFragment represents a fragment of code */
+type outFragment struct {
 	InitLines lineItemSet
 	SetLines  lineItemSet
 	FixLines  lineItemSet
 }
 
-/* init */ func (theOutFragment *outFragment) init() {
+func (theOutFragment *outFragment) init() {
 	theOutFragment.InitLines = make([]*lineItem, 0, 0)
 	theOutFragment.SetLines = make([]*lineItem, 0, 0)
 	theOutFragment.FixLines = make([]*lineItem, 0, 0)
@@ -237,4 +242,5 @@ func (theLineItem lineItem) String() string {
 	}
 	return theLineItem.theText
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.

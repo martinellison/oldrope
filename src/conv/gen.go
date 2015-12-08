@@ -11,11 +11,13 @@ import (
 	"time"
 )
 
-/* templ is the code output template */
-var templ *template.Template
+type generator struct {
+	/* templ is the code output template */
+	templ *template.Template
+}
 
 /* makeTemplate initialises the template */
-func makeTemplate() {
+func (theGenerator *generator) makeTemplate() {
 	var err error
 	templateText := compress(`pages = {
 	{{range .Pages}} {{.Name}}: {
@@ -31,7 +33,7 @@ func makeTemplate() {
 	},
 	{{end}}
 	};`)
-	templ, err = template.New("page").Parse(templateText)
+	theGenerator.templ, err = template.New("page").Parse(templateText)
 	if err != nil {
 		log.Fatalf("template def error: %v", err)
 	}
@@ -47,17 +49,18 @@ func init() {
 /* compress compresses a string by converting sequences of whitespace to a single space */
 func compress(inStr string) string { return whiteSpaceRegex.ReplaceAllLiteralString(inStr, " ") }
 
-/* */ var theOutData outData
+// /* */ var theOutData outData
 
 /* expandTemplate expands the output data into the template */
-func expandTemplate(w io.Writer) {
-	err := templ.Execute(w, theOutData)
+func (theGenerator *generator) expandTemplate(w io.Writer, theOutData outData) {
+	err := theGenerator.templ.Execute(w, theOutData)
 	if err != nil {
 		log.Fatalf("template exp error: %v", err)
 	}
 }
 
-/* genStart generates the fixed part of the output file */ func genStart(w io.Writer) {
+/* genStart generates the fixed part of the output file */
+func (theGenerator *generator) genStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`<!DOCTYPE html>
 <html>
@@ -79,12 +82,12 @@ html, body {color: black; font-family: Georgia, serif;}
 }
 
 /* genHeader generates the fixed part of the output file */
-func genHeader(w io.Writer) {
+func (theGenerator *generator) genHeader(w io.Writer) {
 	w.Write([]byte(fmt.Sprintf("/* created by program on %s */", time.Now())))
 }
 
 /* genJsStart generates the fixed part of the output file */
-func genJsStart(w io.Writer) {
+func (theGenerator *generator) genJsStart(w io.Writer) {
 	w.Write([]byte(compress(
 		`var gd = {};
   var ld = {};
@@ -112,7 +115,7 @@ func genJsStart(w io.Writer) {
 }
 
 /* genJsEnd generates the fixed part of the output fil*/
-func genJsEnd(w io.Writer) {
+func (theGenerator *generator) genJsEnd(w io.Writer) {
 	w.Write([]byte(compress(`setPage('start');
 displayPage();
 console.log('script loaded');
@@ -120,8 +123,9 @@ console.log('script loaded');
 }
 
 /* genEnd generates the fixed part of the output file */
-func genEnd(w io.Writer) {
+func (theGenerator *generator) genEnd(w io.Writer) {
 	w.Write([]byte(compress(`</body>
 </html>`)))
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.

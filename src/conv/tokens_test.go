@@ -51,7 +51,9 @@ func TestConv1(t *testing.T) {
 	assert := assert.New(t)
 	lineChan = make(chan scanLine)
 	tokenChan = make(chan token)
-	go getTokens()
+	var theTokeniser tokeniser
+	theTokeniser.init()
+	go theTokeniser.getTokens()
 	theMockFileReader := makeMockFileReader([]string{"test"})
 	go sendInlines(theMockFileReader, assert)
 	testToken := <-tokenChan
@@ -68,7 +70,9 @@ func TestConv2(t *testing.T) {
 	assert := assert.New(t)
 	lineChan = make(chan scanLine)
 	tokenChan = make(chan token)
-	go getTokens()
+	var theTokeniser tokeniser
+	theTokeniser.init()
+	go theTokeniser.getTokens()
 	inlines := []string{
 		"/* comment */ $[test]$",
 		"$(expr)$ some text",
@@ -107,4 +111,5 @@ func checkToken(testToken *token, theTokenType tokenType, theText string, theLin
 	assert.Equal(theText, testToken.text, "wrong token")
 	assert.Equal(theLineNum, testToken.lineNumber, "wrong line number for '%s'", testToken.text)
 }
-// This file is part of Foobar. Foobar is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. Foobar is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with Foobar. If not, see <http://www.gnu.org/licenses/>.
+
+// This file is part of OldRope. OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.
