@@ -18,7 +18,7 @@ then
 	exit 1
 fi
 
-go build conv
+go build -o bin/conv conv
 BUILDRES=$?
 	if [[ $BUILDRES != 0 ]]
 	then

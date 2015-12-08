@@ -18,7 +18,7 @@ then
 	echo "Build main result is" $BUILDRES
 	exit 1
 fi
-go test -c -o runtest -cover conv
+go test -c -o bin/runtest -cover conv
 COMPILERESULT=$?
 if [[ $COMPILERESULT != 0 ]]
 then
@@ -26,7 +26,7 @@ then
 	exit 1
 fi
 echo "running test"
-./runtest -test.coverprofile test/profile.out
+bin/runtest -test.coverprofile test/profile.out
 if [[ $? != 0 ]]
 then
 	exit 1
