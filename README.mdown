@@ -1,5 +1,3 @@
-Copyright 2015 Martin Ellison. For GPL3 licence notice, see the end of this file.
-
 # OldRope
 
 OldRope creates 'choose your own adventure' games as a single HTML file. It has a similar function to Twine http://twinery.org (and Twine 2) but the games are simpler to deploy, install and play as there is only one HTML/Javascript file to distribute. Also the game is more robust as it does not depend on any external files.
@@ -10,7 +8,7 @@ Coding input text requires some knowldege of simple HTML and Javascript, as thes
 
 The convertor is written in Go (Golang).
 
-##Status
+## Status
 
 OldRope is a new project and is in alpha status at present. Please raise any errors, comments and suggestions in GitHub (https://github.com/martinellison/oldrope).
 
@@ -64,7 +62,7 @@ The syntax contains the following elements:
 
 any other text represents ordinary text which is passed through (HTML special characters are escaped so they will appear unchanged)
 
-###Directives
+### Directives
 
 The following directives are currently accepted:
 
@@ -102,15 +100,15 @@ Javascript is used for controlling the page, for example:
 	
 This will do different things depending on the value of `gd.drunkPotion` (i.e. presumably whether they have drunk the potion).
 
-##Installation
+## Installation
 
-###Downloads
+### Downloads
 
 There is a Linux 64-bit binary available.
 
 There is also a Windows 64-bit binary available, but it has not been tested on Windows (and it does not work on Wine).
 
-###Building from source
+### Building from source
 
 The source can be checked out from github or downloaded.
 
@@ -127,3 +125,19 @@ The test scripts use github.com/stretchr/testify/assert
 The run.sh script uses js-beautify from https://github.com/beautify-web/js-beautify This is not a requirement for normal use; js-beautify is only used to de-obfuscate the generated Javascript for debugging.
 
 The generated HTML/Javascript does not have any dependencies (except if the -jsout option is used, then the HTML requires the Javascript).
+
+## Licencing
+
+OldRope is licenced under GPL3 (see details below and in the LICENSE file). 
+
+Output from OldRope is not restricted by the licence for OldRope. You can distribute the output from OldRope freely, as long as you have the rights to the input.
+
+### GPL3
+
+This file is part of OldRope. 
+
+OldRope is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. 
+
+OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.
+
+Copyright 2015 Martin Ellison. 
