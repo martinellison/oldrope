@@ -1,10 +1,11 @@
+/* test of OldRope */
 $[page start]$
 $<p>$You are sitting in the Guard's office as usual, when the Chief comes in. 
 
 $<p>$"I think $[link]$something has come up$[goto Briefing]$", he says.
 $/gd={haveRing: false, money: 0, maktor: false, oweMaktor: false, knowWitch: false, knowFairy: false};/$
 $[page Briefing]$
-$<p>$"It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$, the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
+$<p>$"It seems there is a dead body in $[link alley]$Thieves' Alley$[end]$", the Chief says. "Not that that is anything unusual, but this one seems to have died by some kind of magic, so I want you to investigate it". $[span alley]$"Thieves' Alley is one of the most disreputable parts of the City", he explains. "It's not just thieves that live there, it's every kind of criminal."$[end]$
 
 $<p>$"Here is some $[link report]$more information$[end]$ from the guard post", he adds. $[span report]$"Officer Grommitt discovered the body of a man about 30 years old during his patrol of Thieves' Alley early this morning. There were no apparent injuries, but quick magic testing showed a very high degree of magic had been used against him. Grommitt's commander, Officer Sqiggs, recommends that the Special Squad be called in."$[end]$
 $<ul>$

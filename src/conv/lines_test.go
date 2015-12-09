@@ -24,7 +24,6 @@ func TestLines1(t *testing.T) {
 }
 func getLine(theScanLine *scanLine, assert *assert.Assertions) (eof bool) {
 	*theScanLine = <-lineChan
-	//	log.Printf("read line: %d, eof: %t", theScanLine.number, theScanLine.eof)
 	return theScanLine.eof
 }
 
