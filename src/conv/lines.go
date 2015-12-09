@@ -40,6 +40,7 @@ func getLines(path string) {
 		log.Printf("get lines open err: %v", err)
 		return
 	}
+	logfIfLogging("input file open: %s", path)
 	defer file.Close()
 	reader := bufio.NewReader(file)
 	for err == nil {
@@ -56,11 +57,6 @@ func getLines(path string) {
 		log.Printf("read error: %v", err)
 	}
 	lineChan <- scanLine{eof: true}
-	if err != nil {
-		reportError(fmt.Sprintf("get lines err: %v", err), lineNumber)
-		log.Printf("get lines err: %v", err)
-
-	}
 	logfIfLogging("%d lines read", lineNumber)
 }
 

@@ -46,6 +46,8 @@ The -log option generates a log file for debugging the convertor.
 
 ## Input language
 
+For an example of the input file, see the test file `test.data` in the distribution.
+
 ### Elements
 
 The syntax contains the following elements:
