@@ -16,7 +16,7 @@ if [[ ! -d $BASE/bin ]]
 then
 	mkdir $BASE/bin
 fi
-go fmt conv
+gofmt -s -w -e src/conv
 FMTRES=$?
 if [[ $FMTRES != 0 ]]
 then

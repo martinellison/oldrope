@@ -13,7 +13,7 @@ func TestLines1(t *testing.T) {
 	oldLogging := logging
 	logging = true
 	lineChan = make(chan scanLine)
-	go getLines("test.data")
+	go getLines("test1.oldrope")
 	ln := 0
 	var theScanLine scanLine
 	for !getLine(&theScanLine, assert) {

@@ -11,7 +11,7 @@ if [[ $? != 0 ]]
 then
 	exit 1
 fi
-$BASE/bin/conv -dir $BASE/test -in ../test.data -jsout testout.js
+$BASE/bin/conv -dir $BASE/test -in ../test1.oldrope -jsout testout.js
 # for js-beautify see https://github.com/beautify-web/js-beautify
 js-beautify $BASE/test/testout.js > temp
 mv temp $BASE/test/testout.js

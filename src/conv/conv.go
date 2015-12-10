@@ -26,7 +26,7 @@ import (
 	var inFileName, outFileName, baseDir, jsFileName, logFileName string
 	var help bool
 	flag.StringVar(&baseDir, "dir", ".", "directory for files")
-	flag.StringVar(&inFileName, "in", "test.data", "input file name")
+	flag.StringVar(&inFileName, "in", "test1.oldrope", "input file name")
 	flag.StringVar(&outFileName, "out", "testout.html", "output file name")
 	flag.StringVar(&jsFileName, "jsout", "", "Javascript output file name (if not specified, Javascript will be embedded in the HTML)")
 	flag.StringVar(&logFileName, "log", "", "log file name (for debugging)")

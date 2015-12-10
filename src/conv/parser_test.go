@@ -76,7 +76,7 @@ func TestParserGetToken1(t *testing.T) {
 	//logging = true
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	assert.Equal(textTokenType, theParser.tokTyp())
 	assert.NotNil(tokenChan)
@@ -87,7 +87,7 @@ func TestParserGetToken2(t *testing.T) {
 	//logging = true
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: "bill"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: "bill"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	assert.Equal(textTokenType, theParser.tokTyp())
 	assert.NotNil(tokenChan)
@@ -107,7 +107,7 @@ func TestParserParseBody2(t *testing.T) {
 func testParseBody(tag string, theFragType fragType, t *testing.T) {
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: tag}, token{theType: textTokenType, text: "fred"}, token{theType: identTokenType, text: "end"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: tag}, {theType: textTokenType, text: "fred"}, {theType: identTokenType, text: "end"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
@@ -118,7 +118,7 @@ func testParseBody(tag string, theFragType fragType, t *testing.T) {
 func TestParserParseInclude1(t *testing.T) {
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: "include"}, token{theType: textTokenType, text: "fred"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: "include"}, {theType: textTokenType, text: "fred"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
@@ -144,7 +144,7 @@ func TestParserParseCode3(t *testing.T) {
 }
 func testParseFrag(theTokenType tokenType, theFragType fragType, assert *assert.Assertions) (theFragmant *fragment) {
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: theTokenType, text: "fred"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: theTokenType, text: "fred"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
@@ -156,7 +156,7 @@ func TestParserParseLink1(t *testing.T) {
 	//logging = true
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "goto"}, token{theType: identTokenType, text: "bill"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: "link"}, {theType: identTokenType, text: "fred"}, {theType: identTokenType, text: "goto"}, {theType: identTokenType, text: "bill"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
@@ -169,7 +169,7 @@ func TestParserParseLink2(t *testing.T) {
 	//logging = true
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "act"}, token{theType: identTokenType, text: "end"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: "link"}, {theType: identTokenType, text: "fred"}, {theType: identTokenType, text: "act"}, {theType: identTokenType, text: "end"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
@@ -182,7 +182,7 @@ func TestParserParseLink3(t *testing.T) {
 	//logging = true
 	assert := assert.New(t)
 	tokenChan = make(chan token)
-	go makeTokens([]token{token{theType: identTokenType, text: "link"}, token{theType: identTokenType, text: "fred"}, token{theType: identTokenType, text: "end"}, token{theType: eofTokenType}})
+	go makeTokens([]token{{theType: identTokenType, text: "link"}, {theType: identTokenType, text: "fred"}, {theType: identTokenType, text: "end"}, {theType: eofTokenType}})
 	theParser := &parser{theCurrentToken: token{theType: textTokenType, text: "", lineNumber: 1}}
 	theFragments := theParser.parseBody([]string{"end"})
 	assert.Equal(2, len(theFragments))
