@@ -3,7 +3,7 @@
 // conv.go (main program)
 /* OldRope is a convertor for  text games. See README.mdown for a description.
 
- */
+*/
 package main
 
 import (

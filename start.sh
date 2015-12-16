@@ -6,12 +6,11 @@
 reset
 export BASE=$(git rev-parse --show-toplevel)
 MACHINE=`uname -n` 
-if [[ $MACHINE == 'edward' ]]
-then
-	export GOX=/home/martin/gocode
-else
-	export GOX=/work/golang
-fi
+case $MACHINE in
+	edward)	export GOX=/home/martin/gocode;;
+	raspberrypi) export GOX=/work/golang;;
+	*) export GOX=/work/golang;;
+esac
 
 export GOPATH="$GOX:$BASE"
 echo "GOPATH is now" $GOPATH
