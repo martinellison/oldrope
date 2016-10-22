@@ -12,21 +12,21 @@ $BASE/build.sh
 BUILDRES=$?
 if [[ $BUILDRES != 0 ]]
 then
-	echo "Build main result is" $BUILDRES
-	exit 1
+    echo "Build main result is" $BUILDRES
+    exit 1
 fi
 go test -c -o $BASE/bin/runtest -cover conv
 COMPILERESULT=$?
 if [[ $COMPILERESULT != 0 ]]
 then
-	echo "build failed"
-	exit 1
+    echo "build failed"
+    exit 1
 fi
 echo "running test"
 bin/runtest -test.coverprofile $BASE/test/profile.out
 if [[ $? != 0 ]]
 then
-	exit 1
+    exit 1
 fi
 go tool cover -func=$BASE/test/profile.out|grep -v '100.0%'
 go tool cover -html=$BASE/test/profile.out -o $BASE/test/profile.html

@@ -5,11 +5,11 @@
 
 reset
 export BASE=$(git rev-parse --show-toplevel)
-MACHINE=`uname -n` 
+MACHINE=`uname -n`
 case $MACHINE in
-	edward)	export GOX=/home/martin/gocode;;
-	raspberrypi) export GOX=/work/golang;;
-	*) export GOX=/work/golang;;
+    edward)	export GOX=/home/martin/gocode;;
+    raspberrypi) export GOX=/work/golang;;
+    *) export GOX=/work/golang;;
 esac
 
 export GOPATH="$GOX:$BASE"
