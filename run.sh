@@ -6,10 +6,10 @@
 reset
 export BASE=$(git rev-parse --show-toplevel)
 cd $BASE
-$BASE/build.sh 
+$BASE/build.sh
 if [[ $? != 0 ]]
 then
-	exit 1
+    exit 1
 fi
 $BASE/bin/conv -dir $BASE/test -in ../test1.oldrope -jsout testout.js
 # for js-beautify see https://github.com/beautify-web/js-beautify
