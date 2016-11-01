@@ -14,3 +14,4 @@ esac
 
 export GOPATH="$GOX:$BASE"
 echo "GOPATH is now" $GOPATH
+/home/martin/git/other2/beautify.sh
