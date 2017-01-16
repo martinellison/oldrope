@@ -6,7 +6,7 @@ The convertor reads in a text file in its own format (different from Twine or Tw
 
 Coding input text requires some knowldege of simple HTML and Javascript, as these are embedded in the input file.
 
-The convertor is written in Go (Golang).
+The convertor is written in Go (<a href='https://golang.org/'>Golang</a>).
 
 ## Status
 
@@ -17,32 +17,32 @@ OldRope is a new project and is in alpha status at present. Please raise any err
 Typical usage is `./conv -dir path/to/dir -in mygame.txt -out mygame.html`
 
   `-dir` *string*
-    	directory for files (default ".")
-		
+        directory for files (default ".")
+        
   `-h` display help
 
   `-hash`
-    	use hash escapes for text
+        use hash escapes for text
 The -hash option is used to replace all text strings with &#...; HTML entities to discourage casual browsing of the game text. Of course, this does not provide any security.
-		
+        
   `-help`
-    	display help
-		
+        display help
+        
   `-in` *string*
-    	input file name (default "test.oldrope")
-		
+        input file name (default "test.oldrope")
+        
   `-jsout` *string*
-    	Javascript output file name (if not specified, Javascript will be embedded in the HTML).
+        Javascript output file name (if not specified, Javascript will be embedded in the HTML).
 The -jsout option is used to create a separate file with the Javascript. This can be run through a formatter if you want to browse the source.
 
-For example, `./conv -dir path/to/dir -in mygame.txt -out mygame.html -js mygame.js` will generate the Javascript to `mygame.js` and `mygame.html` will contain just the HTML with a script link to the Javascript. Usually, you do not want to do this but it is useful for debugging.
-		
+For example, `./conv -dir path/to/dir -in mygame.txt -out mygame.html -js mygame.js` will generate the Javascript to `mygame.js` and `mygame.html` will contain just the HTML with a script link to the Javascript. Usually, you do not want to do this but it is useful for development.
+        
   `-log` *string*
-    	log file name (for debugging).
+        log file name (for debugging).
 The -log option generates a log file for debugging the convertor.
-		
+        
   `-out` *string*
-    	output file name (default "testout.html")
+        output file name (default "testout.html")
 
 ## Input language
 
@@ -84,13 +84,13 @@ The following directives are currently accepted:
 
 These need to be properly escaped so the code will actually look like, say:
 
-	$[link]$ Drink the potion $[act]$ You feel a bit $<i>$strange$</i>$ $/ gd.drunkPotion = true; /$ $[end]$
-	
+    $[link]$ Drink the potion $[act]$ You feel a bit $<i>$strange$</i>$ $/ gd.drunkPotion = true; /$ $[end]$
+    
 Then the text "Drink the potion" will appear, formatted as a link. If the user clicks on the link, the text "You feel a bit *strange*" will appear (with 'strange' in italics) and the variable `gd.drunkPotion` will be set to true.
 
 ### Javascript
 
-Javascript may refer to the following variables:
+The embedded Javascript code may refer to the following variables:
 
 gd (global data)   the game may use this hash to store state e.g. gd.knowsThePassword gd.inventory etc
 
@@ -98,27 +98,27 @@ currentPage  contains the name of the current page (useful inside included pages
 
 Javascript is used for controlling the page, for example:
 
-	$/ if gd.drunkPotion { /$ You feel OK. $/} else { /$ You are dead. $/ gd.alive = false; } /$
-	
+    $/ if gd.drunkPotion { /$ You feel OK. $/} else { /$ You are dead. $/ gd.alive = false; } /$
+    
 This will do different things depending on the value of `gd.drunkPotion` (i.e. presumably whether they have drunk the potion).
 
 ## Installation
 
 ### Downloads
 
-There is a Linux 64-bit binary available.
+There is a Linux 64-bit binary of the convertor available.
 
-There is also a Windows 64-bit binary available, but it has not been tested on Windows (and it does not work on Wine).
+There is also a Windows 64-bit binary of the convertor available, but it has not been tested on Windows (and it does not work on Wine).
 
 ### Building from source
 
-The source can be checked out from github or downloaded.
+The source of the convertor can be checked out from github (https://github.com/martinellison/oldrope) or downloaded.
 
-The only dependency for the convertor itself is the Go (Golang http://golang.org) build system. All the imported packages are in the standard distribution.
+The only dependency for the convertor itself is the Go (Golang http://golang.org) build system. All the imported packages are in the standard Golang distribution.
 
 The program can be built from source using the `build.sh` script included with the source distribution.
 
-The result is just a single executable.
+The result is just a single executable (the convertor).
 
 ### Dependencies
 
@@ -127,6 +127,46 @@ The test scripts use github.com/stretchr/testify/assert
 The run.sh script uses js-beautify from https://github.com/beautify-web/js-beautify This is not a requirement for normal use; js-beautify is only used to de-obfuscate the generated Javascript for debugging.
 
 The generated HTML/Javascript does not have any dependencies (except if the -jsout option is used, then the HTML requires the Javascript).
+
+## Future development
+
+This section is for anyone who wants to develop OldRope and improve it.
+
+### Bugs
+
+There are some bugs.
+
+#### Parser goroutine issue
+
+There is an issue in the front end of the compiler parser, that causes it to occasionally crash (it is an intermittent fault). The compiler is implemented as a set of coroutines (Golang goroutines) and there appears to be some sort of race condition.
+
+#### Page update issue
+
+It seems that, when a mouse click on a link is supposed to replace the link with some text, the link text is not correctly removed. (This problem should go away if the suggested improvements following are implemented).
+
+### Enhancements
+
+The following enhancements would make it easier for story authors to use the convertor.
+
+#### Redo page structure
+
+Currently, the HTML text displayed by OldRope is created by Javascript as required. It would be better to have most of the text in hidden `div`s and to show and hide the text by using CSS `show`/`hide` (by switching between class attributes with different `display` properties). This will make it easier to attach `onclick` handlers to the HTML.
+
+#### Better brackets
+
+It should be possible to come up with better brackets for directives. This will make it easier to write stories (and to change existing stories).
+
+#### Markdown-like formatting
+
+It should be possible to specify formatting in a MarkDown-like format, rather than by entering the HTML tags directly. This will make it easier to write stories.
+
+#### Use own mini-language not embedded Javascript
+
+Currently, as discribed above, dynamic operations such as conditional display of HTML text is done by embedded Javascript (in `$/ .... /$` brackets). This can be coded only by someone who knows Javascript. It would be better to have a custom mini-language for at least the most common tasks such as setting variables, inserting variables into text and conditional inclusion of text. This will make it easier to write stories 
+
+### Naming
+
+There should be a better name than 'OldRope'. 
 
 ## Licencing
 
@@ -142,4 +182,4 @@ OldRope is free software: you can redistribute it and/or modify it under the ter
 
 OldRope is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with OldRope. If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2015 Martin Ellison. 
+Copyright 2015-17 Martin Ellison. 
